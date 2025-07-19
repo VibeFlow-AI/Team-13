@@ -30,7 +30,19 @@ const SessionHighlights = () => {
       language: "Sinhala",
       imageSrc: "https://api.builder.io/api/v1/image/assets/TEMP/6b8dcceb60b2bd2b19d0afbfd3577580954aec5e?placeholderIfAbsent=true",
       heartIconSrc: "https://api.builder.io/api/v1/image/assets/TEMP/3457c926e593a14d56eb1415ef1f823b2368f1e8?placeholderIfAbsent=true"
-    }
+    },
+    {
+      name: "Chathum Rahal",
+      location: "Galle",
+      initials: "CR",
+      initialsColor: "rgba(255,149,0,1)",
+      subjects: ["Mathematics", "History", "English"],
+      description: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled",
+      duration: "1 hour",
+      language: "English",
+      imageSrc: "https://api.builder.io/api/v1/image/assets/TEMP/6184a5219b55414eed291bfd8dc4a5b0966b7fb3?placeholderIfAbsent=true",
+      heartIconSrc: "https://api.builder.io/api/v1/image/assets/TEMP/f5d255d8bc24bf00931fdcb032ed08a5b752c288?placeholderIfAbsent=true"
+    },
   ];
 
   const handleLoadMore = () => {
@@ -65,7 +77,7 @@ const SessionHighlights = () => {
       <div className="text-center mt-16 max-md:mt-10">
         <button 
           onClick={handleLoadMore}
-          className="justify-center items-center flex gap-[7px] text-xl text-[#1D1D1B] font-medium tracking-[-1.2px] leading-none px-2.5 py-3 rounded-[4.477px] border-[0.746px] border-solid border-[#434343] hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400"
+          className="justify-center items-center flex gap-[7px] text-xl text-[#1D1D1B] font-medium tracking-[-1.2px] leading-none px-2.5 py-3 rounded-[4.477px] border-[0.746px] border-solid border-[#434343] hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 mt-4"
           aria-label={showMore ? "Show fewer sessions" : "Load more sessions"}
         >
           <span className="text-[#1D1D1B] self-stretch my-auto">
