@@ -61,16 +61,16 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL(redirectTo, req.url))
     }
 
-    // Check if user has a role assigned
+    // Check if user has a user_type assigned
     const { data: userProfile } = await supabase
       .from('users')
-      .select('role')
-      .eq('id', session.user.id)
+      .select('user_type')
+      .eq('clerk_id', session.user.id)
       .single();
 
-    if (userProfile?.role === 'MENTOR') {
+    if (userProfile?.user_type === 'mentor') {
       return NextResponse.redirect(new URL('/mentor/dashboard', req.url))
-    } else if (userProfile?.role === 'STUDENT') {
+    } else if (userProfile?.user_type === 'student') {
       return NextResponse.redirect(new URL('/mentee/dashboard', req.url))
     } else {
       return NextResponse.redirect(new URL('/role-selection', req.url))

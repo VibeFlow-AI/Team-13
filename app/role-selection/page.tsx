@@ -4,36 +4,44 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { useUser, useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useUser } from "@supabase/auth-helpers-react";
+import { useSupabase } from "@/hooks/use-supabase";
 import { ChevronLeft, GraduationCap, Users } from "lucide-react";
 import { Database } from "@/lib/database.types";
+import { WithErrorBoundary } from "@/components/error-boundary";
 
-export default function RoleSelection() {
+function RoleSelection() {
   const router = useRouter();
   const user = useUser();
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const supabase = useSupabaseClient();
+  const { supabase, isLoading: isSupabaseLoading } = useSupabase();
 
   useEffect(() => {
     const checkUserRole = async () => {
-      if (!user) {
-        router.push("/auth");
+      if (!user || !supabase) {
+        if (!user) {
+          router.push("/auth");
+        }
         return;
       }
 
       try {
-        const { data: userProfile } = await supabase
+        const { data: userProfile, error } = await supabase
           .from('users')
-          .select('role')
-          .eq('id', user.id)
+          .select('user_type')
+          .eq('clerk_id', user.id)
           .single();
 
-        if (userProfile?.role) {
+        if (error && error.code !== 'PGRST116') {
+          console.error("Error checking user type:", error);
+        }
+
+        if (userProfile?.user_type) {
           // User already has a role, redirect to appropriate dashboard
-          if (userProfile.role === 'MENTOR') {
+          if (userProfile.user_type === 'mentor') {
             router.push("/mentor/dashboard");
-          } else if (userProfile.role === 'STUDENT') {
+          } else if (userProfile.user_type === 'student') {
             router.push("/mentee/dashboard");
           }
           return;
@@ -51,22 +59,52 @@ export default function RoleSelection() {
   }, [user, router, supabase]);
 
   const handleMentorClick = async () => {
-    if (!user) return;
+    if (!user || !supabase) return;
 
     try {
       setLoading(true);
-      // Insert user with MENTOR role
-      const { error } = await supabase
+      // Insert user with mentor role
+      // First check if user already exists
+      const { data: existingUser } = await supabase
         .from('users')
-        .insert({
-          id: user.id,
-          email: user.email!,
-          role: 'MENTOR',
-          isOnboarded: false
-        });
+        .select('*')
+        .eq('clerk_id', user.id)
+        .single();
+
+      // If user exists, update instead of insert
+      let error;
+      if (existingUser) {
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({
+            user_type: 'mentor',
+            email: user.email ?? '',
+            name: user.user_metadata?.name ?? user.email?.split('@')[0] ?? 'User',
+          })
+          .eq('clerk_id', user.id);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({
+            clerk_id: user.id,
+            email: user.email ?? '',
+            name: user.user_metadata?.name ?? user.email?.split('@')[0] ?? 'User',
+            user_type: 'mentor',
+            is_active: true,
+            is_verified: false
+          });
+        error = insertError;
+      }
 
       if (error) {
         console.error("Error setting mentor role:", error);
+        console.log("Error details:", JSON.stringify(error, null, 2));
+        console.log("User data:", JSON.stringify({
+          id: user.id,
+          email: user.email,
+          metadata: user.user_metadata
+        }, null, 2));
         return;
       }
 
@@ -79,22 +117,52 @@ export default function RoleSelection() {
   };
 
   const handleStudentClick = async () => {
-    if (!user) return;
+    if (!user || !supabase) return;
 
     try {
       setLoading(true);
-      // Insert user with STUDENT role
-      const { error } = await supabase
+      // Insert user with student role
+      // First check if user already exists
+      const { data: existingUser } = await supabase
         .from('users')
-        .insert({
-          id: user.id,
-          email: user.email!,
-          role: 'STUDENT',
-          isOnboarded: false
-        });
+        .select('*')
+        .eq('clerk_id', user.id)
+        .single();
+
+      // If user exists, update instead of insert
+      let error;
+      if (existingUser) {
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({
+            user_type: 'student',
+            email: user.email ?? '',
+            name: user.user_metadata?.name ?? user.email?.split('@')[0] ?? 'User',
+          })
+          .eq('clerk_id', user.id);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({
+            clerk_id: user.id,
+            email: user.email ?? '',
+            name: user.user_metadata?.name ?? user.email?.split('@')[0] ?? 'User',
+            user_type: 'student',
+            is_active: true,
+            is_verified: false
+          });
+        error = insertError;
+      }
 
       if (error) {
         console.error("Error setting student role:", error);
+        console.log("Error details:", JSON.stringify(error, null, 2));
+        console.log("User data:", JSON.stringify({
+          id: user.id,
+          email: user.email,
+          metadata: user.user_metadata
+        }, null, 2));
         return;
       }
 
@@ -110,8 +178,8 @@ export default function RoleSelection() {
     router.push("/");
   };
 
-  // Show loading spinner while checking user role
-  if (loading) {
+  // Show loading spinner while checking user role or waiting for Supabase
+  if (loading || isSupabaseLoading || !supabase) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
@@ -274,5 +342,14 @@ export default function RoleSelection() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Wrap the component with error boundary
+export default function RoleSelectionWithErrorBoundary() {
+  return (
+    <WithErrorBoundary>
+      <RoleSelection />
+    </WithErrorBoundary>
   );
 }
