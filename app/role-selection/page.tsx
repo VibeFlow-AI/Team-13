@@ -1,6 +1,6 @@
 "use client"
 
-import { Card, CardContent, CardTitle } from "/components/ui/card"
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { GraduationCap, User } from "lucide-react"
 import Link from "next/link"
 

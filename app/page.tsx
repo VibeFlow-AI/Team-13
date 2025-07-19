@@ -1,9 +1,5 @@
 import React from 'react';
-import Header from '../components/common/header';
-import Hero from '../components/home/Hero';
-import FeaturesSection from '../components/home/FeaturesSection';
-import PersonalizedLearning from '../components/home/PersonalizedLearning';
-import SessionHighlights from '../components/home/SessionHighlights';
+import Header from '@/components/common/Header';
 
 const HomePage = () => {
   return (

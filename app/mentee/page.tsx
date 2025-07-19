@@ -1,8 +1,12 @@
+import React from "react";
+import SignInCard from "@/components/mentee/SignInCard";
 
-function page() {
+function MenteeSignInPage() {
   return (
-    <div>page</div>
-  )
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <SignInCard />
+    </div>
+  );
 }
 
-export default page
+export default MenteeSignInPage;
