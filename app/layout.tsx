@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { cookies, headers } from "next/headers";
-import { createServerSupabaseClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import Providers from "@/components/Providers";
 import "./globals.css";
 
@@ -25,8 +25,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Create a Supabase server client using headers & cookies helpers
-  const supabase = createServerSupabaseClient({ headers, cookies });
+  // Create a Supabase server client for App Router
+  const supabase = createServerComponentClient({ cookies });
 
   // Get the current session (if any)
   const {
