@@ -1,0 +1,179 @@
+---
+description: # Google GenAI Gemini API Rules for SvelteKit (2025+)
+globs: 
+alwaysApply: false
+---
+# Google GenAI Gemini API Rules for SvelteKit (2025+)
+
+## 1. Installation and Setup
+
+- **Install the new SDK:**
+  ```bash
+  npm install @google/genai
+  ```
+  *Do not use the deprecated `@google/generative-ai` package; all new features and models require `@google/genai`*.
+
+- **API Key Management:**
+  - Store your Gemini API key in SvelteKit's environment variables (e.g., `.env` or `$env/static/private`).
+  - Never expose API keys in client-side code. Always call Gemini from SvelteKit server routes (`+server.ts/js`).
+
+---
+
+## 2. New Syntax and Breaking Changes
+
+### Client Initialization
+
+```typescript
+import { GoogleGenAI } from "@google/genai";
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+```
+
+### Content Generation
+
+```typescript
+const response = await ai.models.generateContent({
+  model: "gemini-2.5-flash",
+  contents: "Your prompt here",
+  config: {
+    // Optional: systemInstruction, responseMimeType, responseSchema, etc.
+  }
+});
+console.log(response.text);
+```
+
+---
+
+## 3. Structured Output (OpenAPI Schema)
+
+```typescript
+const response = await ai.models.generateContent({
+  model: "gemini-2.5-flash",
+  contents: "List a few popular cookie recipes.",
+  config: {
+    responseMimeType: "application/json",
+    responseSchema: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          recipeName: { type: "string" },
+          ingredients: { type: "array", items: { type: "string" } }
+        },
+        required: ["recipeName", "ingredients"]
+      }
+    }
+  }
+});
+```
+
+---
+
+## 4. Streaming Responses
+
+```typescript
+import { GoogleGenAI } from "@google/genai";
+export const POST = async ({ request }) => {
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const { prompt } = await request.json();
+  const response = await ai.models.generateContentStream({
+    model: "gemini-2.5-flash",
+    contents: prompt
+  });
+  let text = "";
+  for await (const chunk of response) {
+    text += chunk.text;
+    // Optionally, stream to client
+  }
+  return new Response(text, { headers: { "Content-Type": "text/plain" } });
+};
+```
+
+---
+
+## 5. File Uploads (Media, PDFs)
+
+```typescript
+const myfile = await ai.files.upload({
+  file: "path/to/quiz.pdf",
+  config: { mimeType: "application/pdf" }
+});
+const response = await ai.models.generateContent({
+  model: "gemini-2.5-flash",
+  contents: [
+    createUserContent([
+      "Summarize this quiz paper.",
+      createPartFromUri(myfile.uri, myfile.mimeType)
+    ])
+  ]
+});
+```
+
+---
+
+## 6. Function Calling (Tool Use)
+
+```typescript
+const tools = [{
+  functionDeclarations: [{
+    name: "get_student_score",
+    description: "Get a student's quiz score",
+    parameters: {
+      type: "object",
+      properties: { studentId: { type: "string" } },
+      required: ["studentId"]
+    }
+  }]
+}];
+const response = await ai.models.generateContent({
+  model: "gemini-2.5-flash",
+  contents: "What is the score for student 123?",
+  config: { tools }
+});
+```
+
+---
+
+## 7. SvelteKit Integration Best Practices
+
+- Always call Gemini from server-side endpoints.
+- Validate structured output against schemas.
+- Stream when necessary for UX.
+- Store file URIs for audit.
+
+---
+
+## 8. Migration and Edge Cases
+
+- All new features require `@google/genai`.
+- Uploaded files expire after 48 hours; delete unused files.
+
+---
+
+## 9. Example: SvelteKit API Route for Gemini
+
+```typescript
+// src/routes/api/gemini/+server.ts
+import { GoogleGenAI } from "@google/genai";
+import { json } from "@sveltejs/kit";
+
+export const POST = async ({ request }) => {
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const { prompt } = await request.json();
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "object",
+        properties: {
+          answer: { type: "string" },
+          confidence: { type: "number" }
+        },
+        required: ["answer", "confidence"]
+      }
+    }
+  });
+  return json(response.text);
+};
+```

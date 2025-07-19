@@ -1,0 +1,75 @@
+---
+description: quiz-designer-aesthetic – Consistent design guidelines for Quiz & Designer pages (colors, spacing, floating toolbars, A/L paper–inspired aesthetic)
+---
+
+# Quiz & Designer Pages – A/L Paper-Inspired Design System
+
+This rule captures the **visual language** and **interaction patterns** used across all quiz-related experiences (Quiz Builder, Quiz Player, Paper Designer, etc.). Apply these principles to *every new page/component* within those features to guarantee a unified look-and-feel.
+
+## 🎨 Color System
+1. **Primary Surface** – `#FFFFFF` (paper white)  
+   Mimics exam paper; never tint backgrounds except for contextual overlays.
+2. **Paper Frame** – border `1px solid theme(colors.slate.300 / 20%)`  
+   Added via container pseudo-element; see [`PaperContainer.svelte`](mdc:src/lib/components/features/exam-paper/components/PaperContainer.svelte).
+3. **Accent** – `theme(colors.sky.600)`  
+   Used for interactive states (links, buttons, toolbar highlights).
+4. **Disabled / Muted** – `theme(colors.slate.400)`  
+   For non-active controls.
+
+All palette tokens are sourced from Tailwind CSS v4; prefer the *semantic* Tailwind classes (e.g. `bg-surface` if defined) over raw hex.
+
+## 🖋️ Typography
+- Base font stack defined in [`design-tokens.css`](mdc:src/lib/styles/design-tokens.css).  
+  • Latin: `Inter`  
+  • Sinhala/Tamil: `Abhaya Libre` (via `var(--font-sinhala)`).
+- **Base size**  `text-base` (≈16 px ≈ 12 pt).  
+  Headings: `text-lg` for section titles, `text-sm` for metadata.
+- **Line-Height** strictly `leading-snug` to emulate printed paper density.
+
+## 📐 Spacing & Layout
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--content-padding` | `var(--space-5xl)` (96 px) | Outer frame spacing around paper container |
+| `--master-question-spacing` | `0.25rem` | Vertical gap between questions |
+
+See [`comprehensive-paper-styles.css`](mdc:src/lib/styles/comprehensive-paper-styles.css) for derivations.
+
+### Grid Rules
+1. **Paper Width** – Max `210mm` on desktop; center via `mx-auto`.
+2. **Two-Column Mode** – Trigger at ≥ `lg` screens for long papers; calculated with `questionUtils.ts` column estimator.
+3. **Indentation** – Question text & answers share left gutter; assets one level deeper (see memory rule ID 973878).
+
+## 🧰 Floating Toolbars Pattern
+- Components: [`FloatingToolbar.svelte`](mdc:src/lib/components/ui/patterns/Toolbar/FloatingToolbar.svelte) & [`MasterToolbar.svelte`](mdc:src/lib/components/ui/patterns/Toolbar/MasterToolbar.svelte).
+- **Placement** – Absolute inside paper wrapper `top-4 right-4` (mobile: `bottom-4 right-4`).
+- **Shape** – Rounded rectangle `rounded-xl` with glass effect from [`GlassFX.svelte`](mdc:src/lib/components/ui/primitives/GlassFX.svelte).
+- **Shadow** – `shadow-xl/10` to subtly lift off paper.
+- **Interaction** – Hover/focus accent glow `ring-2 ring-sky-400/20`.
+- **Responsiveness** – Collapse into single FAB on screens `<sm`.
+
+### Toolbar Button Guidelines
+| State | Classes |
+|-------|---------|
+| Default | `bg-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/30 text-slate-800` |
+| Hover  | `bg-white/80` |
+| Active | `bg-sky-600 text-white` |
+
+## 🧩 Component Guidelines
+1. **Skeleton v3** components are wrapped with custom styling; never expose default Skeleton colors.
+2. Always use **Zag.js** for interactive elements (dialogs, menus) to guarantee accessibility.
+3. Icons must come from central [`Icon.svelte`](mdc:src/lib/components/core/Icon.svelte) mapping – request additions if missing.
+4. Inputs adopt *paper margin* style – underline (`border-b`) instead of full box.
+
+## 📄 A/L Paper DNA
+- Keep everything **flat & minimal** – no card drop shadows inside paper area.
+- Use **solid separators** (`border-t border-slate-300/70`) to divide major sections like *Section A / B*.
+- Headers replicate exam style: Sinhala ▸ Tamil ▸ English lines, justified + centered inline-block (see memory IDs 973872-973877).
+
+## ⚙️ Implementation Checklist
+- [ ] Wrap page in `<PaperContainer>` where applicable.
+- [ ] Import `comprehensive-paper-styles.css` at page root if not already in layout.
+- [ ] Place `<FloatingToolbar>` inside the paper wrapper.
+- [ ] Respect spacing variables; **never** hard-code pixel margins.
+- [ ] Verify print view (`@media print`) retains fixed `A4` size.
+
+Follow these guidelines for all new quiz/designer additions to maintain visual coherence across the platform.

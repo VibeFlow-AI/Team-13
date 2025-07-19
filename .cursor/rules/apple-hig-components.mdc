@@ -1,0 +1,38 @@
+---
+description: Apple Human Interface Guidelines – Components (concise web version)
+alwaysApply: false
+---
+
+# Apple HIG Components (Web-Optimized)
+
+## Buttons
+• Minimum tap target: 44 × 44 px (`touch-action: manipulation`).
+• Use **variant tokens**: `primary` / `secondary` / `destructive` / `ghost`.
+• One primary action per view; never mark destructive as primary.
+• Include hover, active, disabled states; unify hover & focus-visible for accessibility.
+• Labels: concise verbs (“Save”, “Delete”) or icon + `aria-label` when space-limited.
+
+## Form Inputs
+• Prefer native elements (`<input>`, `<select>`, `<textarea>`); style them, don't rebuild.
+• Placeholder is a hint—not a label. Always keep a visible `<label>` linked via `for`.
+• Stack inputs vertically, equal width (`min(100%, 400px)`), 8 px gap.
+• Inline validation: `aria-invalid="true"` and `<p id="error" role="alert">`, referenced via `aria-describedby`.
+• Number inputs: `inputmode="numeric" pattern="[0-9]*"` for mobile keyboards.
+
+## Navigation
+• Top-level sections: **TabBar** pattern—horizontal on mobile, collapsible sidebar on desktop.
+• Mark current route with `aria-current="page"`.
+• Keyboard nav: arrow keys to move, `Enter`/`Space` to activate; manage focus with roving `tabindex`.
+• Persist active tab/section in URL (`?tab=…`) or store for deep linking.
+
+## Lists & Tables
+• Simple lists: `<ul>` with Flex/Grid; tabular data: semantic `<table>`.
+• Keep cell content concise; wrap text, avoid unscrollable overflow.
+• Headers: bold, sentence case; sortable headers expose `[aria-sort]` and `role="button"`.
+• Selection modes: hover highlight, checkbox for multi-select; announce count via live region.
+• Use disclosure chevrons or "…" menus for per-row actions; avoid mixing row click + inline links.
+
+- Provide appropriate selection feedback
+- Use info buttons only for additional details, not navigation
+- Implement disclosure indicators for hierarchical navigation
+- Choose list styles that coordinate with data and platform

@@ -1,0 +1,41 @@
+---
+description: Apple Human Interface Guidelines – Interaction Patterns (concise web version)
+alwaysApply: false
+---
+
+# Apple HIG Patterns (Web-Optimized)
+
+## Modals & Sheets
+• Use semantic `<dialog>` (or div with `role="dialog"` + `aria-modal="true"`) for focused tasks.
+• Dismiss via close button **and** `Escape`; return focus to trigger element.
+• Favor medium-sized overlays on desktop; full-screen modals only on small screens.
+• Non-blocking **side sheets** (`<aside role="complementary">`) let users reference parent content.
+
+## Alerts
+• Reserve alerts for destructive or blocking confirmations.
+• Title = concise question; buttons state outcomes ("Delete", "Cancel").
+• Destructive buttons use red accent and `data-variant="destructive"`.
+• Prefer inline feedback over frequent alerts to avoid interruption.
+
+## Feedback & Loading
+• Provide touch/hover feedback within 100 ms (opacity or ripple).
+• Show spinner for tasks > 0.5 s; progress bar with %, or step count if length is known.
+• Use skeleton placeholders for whole-page or list loads to reduce content shift.
+• Always allow cancellation for operations expected to exceed 10 s.
+
+## Accessibility
+• Maintain logical heading order (`h1 → h2 → h3`).
+• Define landmarks: `header`, `nav`, `main`, `footer`. Use ARIA roles as fallback.
+• Trap focus inside open dialogs; restore on close.
+• Visible focus outline ≥ 2 px, 3 : 1 contrast.
+• Announce dynamic region changes via `aria-live="polite"`.
+
+## Errors & Validation
+• Inline validation near field; summary alert at top for screen readers.
+• Keep user input intact; autofocus first invalid control.
+• Use friendly language, explain fix, avoid technical jargon.
+
+- Explain what went wrong in clear, non-technical language
+- Suggest specific steps to resolve errors
+- Preserve user input when possible during error correction
+- Provide alternative paths when primary action fails
