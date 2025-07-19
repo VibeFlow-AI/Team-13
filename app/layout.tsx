@@ -42,9 +42,7 @@ export default async function RootLayout({
       >
         <Providers session={session}>
           {/* Global student navbar */}
-          {/* TODO: Replace hard-coded sessionCount with real data when available */}
-          <StudentNavbar />
-          {children}
+          {/* TODO: Replace hard-coded sessionCount with real data when available */}          {children}
         </Providers>
       </body>
     </html>

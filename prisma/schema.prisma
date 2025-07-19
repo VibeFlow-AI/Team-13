@@ -14,6 +14,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  role      UserRole
+  isOnboarded Boolean @default(false)
+  
+  // Student fields
+  fullName        String?
+  age             Int?
+  contactNumber   String?
+  institution     String?
+  fieldOfStudy    String?
+  currentLevel    String?
+  goals           String?
+  subjects        String[] // JSON array of subjects
+  learningStyle   String?
+  
+  // Mentor fields
+  expertise       String?
+  experience      Int?
+  qualifications  String?
+  availability    String?
+  mentorGoals     String?
+  specializations String[] // JSON array of specializations
+  
+  onboardingProgress OnboardingProgress?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model OnboardingProgress {
+  id          String @id @default(cuid())
+  userId      String @unique
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  currentStep Int    @default(1)
+  totalSteps  Int    @default(3)
+  formData    Json   // Store partial form data as JSON
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("onboarding_progress")
+}
+
 model Sample {
   id String @id @default(cuid())
 
@@ -21,4 +69,9 @@ model Sample {
   updatedAt DateTime @updatedAt
 
   @@map("samples")
+}
+
+enum UserRole {
+  STUDENT
+  MENTOR
 }
