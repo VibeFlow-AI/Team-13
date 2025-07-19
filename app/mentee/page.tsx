@@ -1,8 +1,9 @@
+import { MenteeDashboard } from "@/components/mentee-dashboard";
 
-function page() {
+export default function MenteeDashboardPage() {
   return (
-    <div>page</div>
-  )
-}
-
-export default page
+    <main className="container mx-auto px-4 py-8">
+      <MenteeDashboard />
+    </main>
+  );
+} 
