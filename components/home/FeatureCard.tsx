@@ -9,13 +9,22 @@ interface FeatureCardProps {
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, imageSrc, imageAlt }) => {
   return (
-    <article className="flex flex-col relative aspect-[0.41] grow text-[32px] text-black font-medium tracking-[-1.92px] leading-9 pt-[202px] rounded-[30px] max-md:mt-[17px] max-md:pt-[100px]">
+    <article className="flex flex-col relative grow text-[32px] text-black font-medium tracking-[-1.92px] leading-9 pt-[202px] max-md:mt-[17px] max-md:pt-[100px]">
       <img
         src={imageSrc}
-        className="absolute h-full w-full object-cover inset-0"
+        className="absolute h-full w-full object-cover inset-0 rounded-2xl"
         alt={imageAlt}
       />
-      <div className="relative pt-[263px] pb-[71px] px-7 rounded-[0px_0px_30px_30px] max-md:pt-[100px] max-md:px-5">
+      {/* Gradient overlay */}
+      <div
+        className="absolute inset-0 rounded-2xl pointer-events-none"
+        style={{
+          background: 'linear-gradient(to top, white 10%, transparent 100%)',
+          zIndex: 1,
+          height: '100%',
+        }}
+      />
+      <div className="relative pt-[263px] pb-[71px] px-7 rounded-[0px_0px_30px_30px] max-md:pt-[100px] max-md:px-5" style={{ zIndex: 2 }}>
         <h3 className="text-[32px] font-medium leading-9 tracking-[-1.92px]">
           {title}
         </h3>
