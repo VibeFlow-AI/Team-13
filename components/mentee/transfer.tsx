@@ -22,10 +22,10 @@ interface UploadedFile {
 }
 
 export default function TransferSlip({
-  mentorName = "Jhon Doe",
-  sessionDate = "2025-07-10",
+  mentorName = "Miraj Ahmed",
+  sessionDate = "2025-07-19",
   sessionTime = "10:00",
-  amount = "LKR 2,000",
+  amount = "LKR 1500",
   onPaymentConfirmed,
   onCancel
 }: TransferSlipProps) {
@@ -124,7 +124,7 @@ export default function TransferSlip({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-black flex flex-col">
       {/* Navigation Bar */}
       <nav className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -148,7 +148,7 @@ export default function TransferSlip({
 
             {/* Right Side */}
             <div className="flex items-center space-x-4">
-              <Button className="bg-gray-800 hover:bg-gray-700 text-white">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                 Dashboard
               </Button>
               <button className="w-8 h-8 bg-gray-800 rounded flex items-center justify-center">
@@ -159,8 +159,8 @@ export default function TransferSlip({
         </div>
       </nav>
 
-      {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      {/* Main Content - Fullscreen */}
+      <div className="flex-1 flex items-center justify-center p-4 relative">
         <Card className="w-full max-w-md bg-white shadow-xl border-0">
           <CardHeader className="text-center pb-6">
             <CardTitle className="text-xl font-semibold text-gray-900">
@@ -282,6 +282,13 @@ export default function TransferSlip({
             </div>
           </CardContent>
         </Card>
+
+        {/* Bottom-left branding icon */}
+        <div className="absolute bottom-4 left-4">
+          <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center">
+            <span className="text-white font-bold text-sm">N</span>
+          </div>
+        </div>
       </div>
     </div>
   )
