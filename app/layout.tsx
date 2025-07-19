@@ -26,7 +26,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   // Create a Supabase server client for App Router
-  const supabase = createServerComponentClient({ cookies });
+  const cookieStore = (await cookies()) as any;
+  const supabase = createServerComponentClient({ cookies: () => cookieStore });
 
   // Get the current session (if any)
   const {

@@ -1,40 +1,41 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export async function addSample(formData: FormData) {
-  const id = formData.get("id") as string;
+  const id = (formData.get("id") as string)?.trim();
 
-  if (!id || !id.trim()) {
+  if (!id) {
     return { error: "Sample ID is required" };
   }
 
-  try {
-    const sample = await prisma.sample.create({
-      data: {
-        id: id.trim(),
-      },
-    });
+  const supabase = await createSupabaseServerClient();
 
-    revalidatePath("/");
-    return { success: true, sample };
-  } catch (error) {
-    console.error("Error creating sample:", error);
+  const { data, error } = await supabase
+    .from("sample")
+    .insert({ id })
+    .single();
+
+  if (error) {
+    console.error("Error inserting sample:", error);
     return { error: "Failed to create sample. ID might already exist." };
   }
+
+  revalidatePath("/");
+  return { success: true, sample: data };
 }
 
 export async function deleteSample(id: string) {
-  try {
-    await prisma.sample.delete({
-      where: { id },
-    });
+  const supabase = await createSupabaseServerClient();
 
-    revalidatePath("/");
-    return { success: true };
-  } catch (error) {
+  const { error } = await supabase.from("sample").delete().eq("id", id);
+
+  if (error) {
     console.error("Error deleting sample:", error);
     return { error: "Failed to delete sample" };
   }
+
+  revalidatePath("/");
+  return { success: true };
 }

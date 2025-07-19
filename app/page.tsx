@@ -1,10 +1,11 @@
 import SampleView from "@/components/sample-view";
-import { prisma } from "@/lib/prisma";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 async function Home() {
-  const samples = await prisma.sample.findMany();
+  const supabase = await createSupabaseServerClient();
+  const { data: samples } = await supabase.from("sample").select("*");
 
-  return <SampleView initialSamples={samples} />;
+  return <SampleView initialSamples={samples ?? []} />;
 }
 
 export default Home;
