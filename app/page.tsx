@@ -1,13 +1,13 @@
-import React from 'react';
-import Header from '../components/common/header';
-import Hero from '../components/home/Hero';
-import FeaturesSection from '../components/home/FeaturesSection';
-import PersonalizedLearning from '../components/home/PersonalizedLearning';
-import SessionHighlights from '../components/home/SessionHighlights';
+import React from "react";
+import Header from "../components/common/header";
+// import Hero from "../components/home/Hero";
+// import FeaturesSection from "../components/home/FeaturesSection";
+// import PersonalizedLearning from "../components/home/PersonalizedLearning";
+// import SessionHighlights from "../components/home/SessionHighlights";
 
 const HomePage = () => {
   return (
-    <div className="bg-[rgba(244,244,244,1)] flex flex-col overflow-hidden items-stretch">
+    <div className="flex flex-col items-stretch overflow-hidden bg-[rgba(244,244,244,1)]">
       <div className="flex w-full flex-col items-stretch px-[77px] max-md:max-w-full max-md:px-5">
         <Header />
 
@@ -18,7 +18,7 @@ const HomePage = () => {
         </main> */}
       </div>
 
-      <div className="self-center z-10 mt-[-7px] w-full max-w-[1351px] max-md:max-w-full">
+      <div className="z-10 mt-[-7px] w-full max-w-[1351px] self-center max-md:max-w-full">
         {/* <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
           <PersonalizedLearning />
 
