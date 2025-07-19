@@ -135,7 +135,7 @@ export default function DashboardPage() {
 
       <main className="max-w-7xl mx-auto px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-fit grid-cols-2 bg-gray-100 rounded-lg p-1 mb-8">
+          <TabsList className="grid w-full sm:w-fit sm:grid-cols-2 bg-gray-100 rounded-lg p-1 mb-8">
             <TabsTrigger value="explore" className="px-6 py-3 rounded-md font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200">
               <Search className="h-4 w-4 mr-2" />
               Explore Mentors
@@ -158,11 +158,11 @@ export default function DashboardPage() {
                 />
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" className="px-6 py-3 h-12 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200">
+                <Button variant="outline" className="flex-1 sm:flex-initial justify-center px-6 py-3 h-12 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200">
                   <Filter className="h-4 w-4 mr-2" />
                   Filters
                 </Button>
-                <Button variant="outline" className="px-6 py-3 h-12 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200">
+                <Button variant="outline" className="flex-1 sm:flex-initial justify-center px-6 py-3 h-12 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200">
                   <SortAsc className="h-4 w-4 mr-2" />
                   Sort
                 </Button>
@@ -273,5 +273,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
