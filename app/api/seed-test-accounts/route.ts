@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { seedTestAccounts } from "@/lib/seedTestAccounts";
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "@/lib/database.types";
+import { exec } from "child_process";
+import { promisify } from "util";
 
 // Secure API route with a secret key to prevent unauthorized access
 const API_SECRET_KEY = process.env.SEED_API_SECRET || "development_seed_key";
@@ -26,29 +27,27 @@ export async function POST(request: Request) {
       );
     }
 
-    // Seed the test accounts
-    // Use the latest Supabase JS client with proper typing
-    const supabaseAdmin = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        }
+    // Use the promisify version of exec to run the seed script
+    const execPromise = promisify(exec);
+
+    try {
+      // Run the seed script
+      const { stdout, stderr } = await execPromise('node ./scripts/seed.js');
+
+      if (stderr) {
+        console.error('Seed script stderr:', stderr);
       }
-    );
 
-    const result = await seedTestAccounts();
+      console.log('Seed script stdout:', stdout);
 
-    if (result.success) {
       return NextResponse.json(
-        { message: "Test accounts seeded successfully" },
+        { message: "Test accounts seeded successfully", output: stdout },
         { status: 200 }
       );
-    } else {
+    } catch (error) {
+      console.error('Error running seed script:', error);
       return NextResponse.json(
-        { error: "Failed to seed test accounts", details: result.error },
+        { error: "Failed to seed test accounts", details: error },
         { status: 500 }
       );
     }

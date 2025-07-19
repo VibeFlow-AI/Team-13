@@ -56,7 +56,7 @@ SUPABASE_JWT_SECRET=your-jwt-secret
 
 ## Test Accounts for Quick Login
 
-The application includes quick login functionality for development and testing purposes. On the login page, you'll see "Quick Login" buttons to easily fill in credentials for either a mentor or mentee account.
+The application includes quick login functionality for development and testing purposes. On the login page, you'll see "Quick Login" buttons to instantly sign in as either a mentor or mentee for testing.
 
 ### Available Test Accounts
 
@@ -66,14 +66,10 @@ The application includes quick login functionality for development and testing p
 | Mentee | mentee@example.com | mentee123 | "Login as Mentee" |
 
 To use this feature:
-1. Click the "Login as Mentor" or "Login as Mentee" button to auto-fill credentials
-2. Click the "Welcome Back" button to complete the login
-3. You'll be redirected to the appropriate dashboard based on the role
+1. Click the "Login as Mentor" or "Login as Mentee" button
+2. You'll be automatically signed in and redirected to the appropriate dashboard based on the role
 
-These accounts must be created in your Supabase database before they can be used with the quick login feature. You can create them:
-
-- Directly through the Supabase Dashboard
-- Using the provided seed script: `npm run seed`
+These accounts must be created in your Supabase database before they can be used with the quick login feature. Run `npm run seed` to create these accounts automatically.
 
 See [Test Accounts Documentation](docs/test-accounts.md) for more details about implementation and customization.
 

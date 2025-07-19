@@ -28,6 +28,7 @@ export async function middleware(req: NextRequest) {
     '/',
     '/auth',
     '/auth/reset-password',
+    '/auth/callback',
     '/test-navigation'
   ]
 
@@ -52,14 +53,28 @@ export async function middleware(req: NextRequest) {
   }
 
   // If authenticated user tries to access auth pages, redirect to role selection
-  if ((pathname === '/auth' || pathname.startsWith('/auth/')) && session) {
+  // Special case for auth callback which handles its own redirection
+  if ((pathname === '/auth' || pathname.startsWith('/auth/')) && session && pathname !== '/auth/callback') {
     const redirectTo = req.nextUrl.searchParams.get('redirectTo')
 
     if (redirectTo && protectedRoutes.includes(redirectTo)) {
       return NextResponse.redirect(new URL(redirectTo, req.url))
     }
 
-    return NextResponse.redirect(new URL('/role-selection', req.url))
+    // Check if user has a role assigned
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
+
+    if (userProfile?.role === 'MENTOR') {
+      return NextResponse.redirect(new URL('/mentor/dashboard', req.url))
+    } else if (userProfile?.role === 'STUDENT') {
+      return NextResponse.redirect(new URL('/mentee/dashboard', req.url))
+    } else {
+      return NextResponse.redirect(new URL('/role-selection', req.url))
+    }
   }
 
   return res

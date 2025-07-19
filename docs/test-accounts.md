@@ -2,7 +2,7 @@
 
 ## Quick Login Feature
 
-The application provides a quick login feature for development and testing purposes, allowing easy access with pre-configured mentor and mentee accounts.
+The application provides a quick login feature for development and testing purposes, allowing instant access with pre-configured mentor and mentee accounts.
 
 ### Available Test Accounts
 
@@ -15,9 +15,8 @@ The application provides a quick login feature for development and testing purpo
 
 1. Navigate to the login page (`/auth`)
 2. Under the regular login form, you'll see "Quick Login (For Development)" options
-3. Click either "Login as Mentor" or "Login as Mentee" to automatically fill the credentials
-4. Click the "Welcome Back" button to complete the login process
-5. After successful login, the system will redirect you to the appropriate dashboard based on the role
+3. Click either "Login as Mentor" or "Login as Mentee" to automatically sign in with those credentials
+4. After a brief moment, you'll be automatically redirected to the appropriate dashboard based on the role
 
 ### Account Properties
 
@@ -40,11 +39,11 @@ The application provides a quick login feature for development and testing purpo
 
 ### Technical Implementation
 
-For the quick login feature to work properly, test accounts need to be manually created in Supabase with the credentials mentioned above. You can use the following methods:
+For the quick login feature to work properly, test accounts must exist in Supabase with the credentials mentioned above. You can create them using:
 
-1. Create accounts directly through the Supabase dashboard
-2. Use the `seedTestAccounts.ts` script in a separate process
-3. The quick login feature only auto-fills credentials; it doesn't create accounts automatically
+1. The included seed script: `npm run seed`
+2. Creating accounts directly through the Supabase dashboard
+3. The quick login feature automatically signs you in with the pre-configured accounts
 
 ### Security Considerations
 
@@ -56,15 +55,26 @@ For the quick login feature to work properly, test accounts need to be manually 
 
 To modify the test account details:
 
-1. Edit the quick login credentials in the `AuthPage.tsx` component in the `quickLoginUsers` array
-2. If you need to update actual accounts in Supabase, modify the `seedTestAccounts.ts` file and run it as a separate script
-3. Make sure the credentials match between your Supabase database and the quick login buttons
+1. Edit the credentials in the `AuthPage.tsx` component in the `quickLoginUsers` array
+2. Update the seed script in `scripts/seed.js` with the same credentials
+3. Run `npm run seed` to create/update the accounts in your Supabase database
+4. Make sure the credentials match between your Supabase database and the quick login buttons
 
 ### Troubleshooting
 
-If login doesn't work after using the quick fill buttons:
+If the quick login doesn't work:
 
-1. Verify that the accounts exist in your Supabase database
+1. Verify that the accounts exist in your Supabase database by running `npm run seed`
 2. Check browser console for any authentication errors
-3. Ensure your Supabase environment variables are correctly set
-4. Try creating the accounts manually through the regular signup process
+3. Ensure your Supabase environment variables are correctly set in `.env`
+4. Check that the accounts have the proper roles assigned in the Supabase database
+5. Make sure the user accounts have `isOnboarded` set to `true` in the database
+
+### Authentication Flow
+
+The authentication system is designed to:
+
+1. Send new users to the role selection page after signup
+2. Redirect existing users directly to their role-specific dashboards after login
+3. Handle OAuth redirects properly with a callback page
+4. Keep authenticated users away from the authentication pages

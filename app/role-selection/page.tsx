@@ -1,30 +1,126 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { useUser } from "@supabase/auth-helpers-react";
+import { useUser, useSupabaseClient } from "@supabase/auth-helpers-react";
 import { ChevronLeft, GraduationCap, Users } from "lucide-react";
+import { Database } from "@/lib/database.types";
 
 export default function RoleSelection() {
   const router = useRouter();
   const user = useUser();
+  const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const supabase = useSupabaseClient();
 
-  const handleMentorClick = () => {
-    router.push("/mentor/onboarding");
+  useEffect(() => {
+    const checkUserRole = async () => {
+      if (!user) {
+        router.push("/auth");
+        return;
+      }
+
+      try {
+        const { data: userProfile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        if (userProfile?.role) {
+          // User already has a role, redirect to appropriate dashboard
+          if (userProfile.role === 'MENTOR') {
+            router.push("/mentor/dashboard");
+          } else if (userProfile.role === 'STUDENT') {
+            router.push("/mentee/dashboard");
+          }
+          return;
+        }
+
+        setUserRole(null); // User doesn't have a role yet
+      } catch (error) {
+        console.error("Error checking user role:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkUserRole();
+  }, [user, router, supabase]);
+
+  const handleMentorClick = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      // Insert user with MENTOR role
+      const { error } = await supabase
+        .from('users')
+        .insert({
+          id: user.id,
+          email: user.email!,
+          role: 'MENTOR',
+          isOnboarded: false
+        });
+
+      if (error) {
+        console.error("Error setting mentor role:", error);
+        return;
+      }
+
+      router.push("/mentor/onboarding");
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleStudentClick = () => {
-    router.push("/mentee-onboard");
+  const handleStudentClick = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      // Insert user with STUDENT role
+      const { error } = await supabase
+        .from('users')
+        .insert({
+          id: user.id,
+          email: user.email!,
+          role: 'STUDENT',
+          isOnboarded: false
+        });
+
+      if (error) {
+        console.error("Error setting student role:", error);
+        return;
+      }
+
+      router.push("/mentee-onboard");
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBackHome = () => {
     router.push("/");
   };
 
+  // Show loading spinner while checking user role
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+      </div>
+    );
+  }
+
   // Redirect to auth if not authenticated
   if (!user) {
-    router.push("/auth");
     return null;
   }
 
@@ -46,13 +142,13 @@ export default function RoleSelection() {
         {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-4xl font-light text-gray-900 mb-6">
-            Get Started
+            Welcome to Your Learning Journey
           </h1>
           <p className="text-xl text-gray-600 font-light max-w-2xl mx-auto">
-            Choose your path to begin your learning or teaching journey
+            To complete your account setup, please choose your role in our platform
           </p>
           <div className="mt-8 text-sm text-gray-500 font-light">
-            Complete onboarding → Access your personalized dashboard → Start your journey
+            Select your role → Complete onboarding → Access your personalized dashboard
           </div>
         </div>
 
@@ -77,9 +173,10 @@ export default function RoleSelection() {
               </div>
               <Button
                 onClick={handleMentorClick}
-                className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg transition-all duration-200 group-hover:scale-105"
+                disabled={loading}
+                className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg transition-all duration-200 group-hover:scale-105 disabled:opacity-50"
               >
-                Continue as a Mentor
+                {loading ? "Setting up..." : "Continue as a Mentor"}
               </Button>
             </CardContent>
           </Card>
@@ -103,9 +200,10 @@ export default function RoleSelection() {
               </div>
               <Button
                 onClick={handleStudentClick}
-                className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg transition-all duration-200 group-hover:scale-105"
+                disabled={loading}
+                className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg transition-all duration-200 group-hover:scale-105 disabled:opacity-50"
               >
-                Continue as a Student
+                {loading ? "Setting up..." : "Continue as a Student"}
               </Button>
             </CardContent>
           </Card>

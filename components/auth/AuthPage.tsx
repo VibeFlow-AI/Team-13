@@ -36,7 +36,7 @@ interface QuickLoginUser {
   label: string;
   email: string;
   password: string;
-  role: 'mentor' | 'mentee';
+  role: 'MENTOR' | 'STUDENT';
 }
 
 export default function AuthPage() {
@@ -62,13 +62,13 @@ export default function AuthPage() {
       label: "Login as Mentor",
       email: "mentor@example.com",
       password: "mentor123",
-      role: "mentor"
+      role: "MENTOR"
     },
     {
       label: "Login as Mentee",
       email: "mentee@example.com",
       password: "mentee123",
-      role: "mentee"
+      role: "STUDENT"
     }
   ];
 
@@ -134,8 +134,9 @@ export default function AuthPage() {
           setMessage({ type: "error", text: error.message });
         } else {
           setMessage({ type: "success", text: "Login successful! Redirecting..." });
+          // Let middleware handle the redirection based on user role
           setTimeout(() => {
-            router.push("/role-selection");
+            router.refresh();
           }, 1000);
         }
       } else if (mode === "signup") {
@@ -186,7 +187,10 @@ export default function AuthPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/role-selection`,
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            prompt: 'login'  // Force new sign-in to prevent session conflicts
+          }
         },
       });
 
@@ -210,15 +214,15 @@ export default function AuthPage() {
 
     setMessage({
       type: "success",
-      text: `Credentials filled for ${user.role} account. Click "Welcome Back" to log in.`
+      text: `Credentials filled for ${user.role === 'MENTOR' ? 'Mentor' : 'Student'} account. Click "Welcome Back" to log in.`
     });
 
-    // Option to automatically submit:
-    // Uncomment this section if you want auto-submission
-    /*
+    // Auto-submit after a brief pause
     setIsLoading(true);
 
     try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email: user.email,
         password: user.password,
@@ -227,9 +231,13 @@ export default function AuthPage() {
       if (error) {
         setMessage({ type: "error", text: error.message });
       } else {
-        setMessage({ type: "success", text: `Login successful as ${user.role}! Redirecting...` });
+        setMessage({
+          type: "success",
+          text: `Login successful! Redirecting to ${user.role === 'MENTOR' ? 'Mentor' : 'Student'} dashboard...`
+        });
+
         setTimeout(() => {
-          if (user.role === 'mentor') {
+          if (user.role === 'MENTOR') {
             router.push("/mentor/dashboard");
           } else {
             router.push("/mentee/dashboard");
@@ -241,7 +249,6 @@ export default function AuthPage() {
     } finally {
       setIsLoading(false);
     }
-    */
   };
 
   const getTitle = () => {
@@ -437,7 +444,7 @@ export default function AuthPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2 text-xs text-center text-gray-500 mb-2">
-                    Click a button to auto-fill credentials, then click "Welcome Back" to sign in
+                    Click a button to auto-fill and sign in with test credentials
                   </div>
                   {quickLoginUsers.map((user, index) => (
                     <Button
@@ -447,10 +454,10 @@ export default function AuthPage() {
                       onClick={() => handleQuickLogin(user)}
                       disabled={isLoading}
                       className={`h-11 border-gray-300 hover:bg-gray-50 ${
-                        user.role === 'mentor' ? 'hover:bg-blue-50' : 'hover:bg-green-50'
+                        user.role === 'MENTOR' ? 'hover:bg-blue-50' : 'hover:bg-green-50'
                       }`}
                     >
-                      {user.role === 'mentor' ? (
+                      {user.role === 'MENTOR' ? (
                         <Users className="h-4 w-4 mr-2" />
                       ) : (
                         <GraduationCap className="h-4 w-4 mr-2" />
