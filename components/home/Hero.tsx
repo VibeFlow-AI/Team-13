@@ -2,12 +2,18 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@supabase/auth-helpers-react';
 
 const Hero = () => {
   const router = useRouter();
+  const user = useUser();
 
   const handleGetStarted = () => {
-    router.push('/role-selection');
+    if (!user) {
+      router.push('/auth?redirectTo=/role-selection');
+    } else {
+      router.push('/role-selection');
+    }
   };
 
   return (

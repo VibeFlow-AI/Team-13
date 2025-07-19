@@ -4,7 +4,7 @@ import { createSupabaseBrowserClient } from './supabase-browser';
 import { createSupabaseServerClient } from './supabase-server';
 import { type Database } from './database.types';
 import { cache } from 'react';
-import { User as ClerkUser } from '@supabase/auth-helpers-nextjs';
+import { User as AuthUser } from '@supabase/supabase-js';
 
 // Types based on the database schema
 export type User = Database['public']['Tables']['users']['Row'];
@@ -18,14 +18,14 @@ export const getServerClient = cache(async () => {
 });
 
 // Auth related functions
-export async function getOrCreateUser(clerkUser: ClerkUser): Promise<User | null> {
+export async function getOrCreateUser(authUser: AuthUser): Promise<User | null> {
   const supabase = createSupabaseBrowserClient();
 
   // First check if user already exists
   const { data: existingUser, error: fetchError } = await supabase
     .from('users')
     .select('*')
-    .eq('clerk_id', clerkUser.id)
+    .eq('id', authUser.id)
     .single();
 
   if (existingUser) return existingUser;
@@ -36,10 +36,10 @@ export async function getOrCreateUser(clerkUser: ClerkUser): Promise<User | null
 
   // User doesn't exist, create a new user record
   const newUser = {
-    clerk_id: clerkUser.id,
-    email: clerkUser.email ?? '',
-    name: clerkUser.user_metadata?.name || clerkUser.email?.split('@')[0] || 'User',
-    avatar_url: clerkUser.user_metadata?.avatar_url,
+    id: authUser.id,
+    email: authUser.email ?? '',
+    name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
+    avatar_url: authUser.user_metadata?.avatar_url,
     is_active: true,
     is_verified: false,
   };
@@ -78,13 +78,13 @@ export async function getUserById(id: string, useServer = true) {
   return data as User;
 }
 
-export async function getUserByClerkId(clerkId: string, useServer = true) {
+export async function getUserByAuthId(userId: string, useServer = true) {
   const supabase = useServer ? await getServerClient() : createSupabaseBrowserClient();
 
   const { data, error } = await supabase
     .from('users')
     .select('*')
-    .eq('clerk_id', clerkId)
+    .eq('id', userId)
     .single();
 
   if (error) {
@@ -92,7 +92,7 @@ export async function getUserByClerkId(clerkId: string, useServer = true) {
     if (error.code === 'PGRST116') {
       return null;
     }
-    console.error('Error fetching user by clerk ID:', error);
+    console.error('Error fetching user by ID:', error);
     return null;
   }
 
@@ -400,12 +400,12 @@ export async function updateSession(id: string, sessionData: Partial<Database['p
 }
 
 // Auth check utility
-export async function checkUserOnboardingStatus(clerkId: string): Promise<{
+export async function checkUserOnboardingStatus(userId: string): Promise<{
   hasAccount: boolean;
   userType: 'student' | 'mentor' | null;
   isOnboarded: boolean;
 }> {
-  const user = await getUserByClerkId(clerkId, false);
+  const user = await getUserByAuthId(userId, false);
 
   if (!user) {
     return {
@@ -426,8 +426,8 @@ export async function checkUserOnboardingStatus(clerkId: string): Promise<{
 }
 
 // Helper to determine where a user should be redirected based on their status
-export async function getUserRedirectPath(clerkId: string): Promise<string> {
-  const status = await checkUserOnboardingStatus(clerkId);
+export async function getUserRedirectPath(userId: string): Promise<string> {
+  const status = await checkUserOnboardingStatus(userId);
 
   if (!status.hasAccount) {
     // User doesn't exist in our database yet

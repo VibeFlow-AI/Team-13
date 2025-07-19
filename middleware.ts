@@ -19,8 +19,7 @@ export async function middleware(req: NextRequest) {
     '/mentee/booking',
     '/mentee/transfer',
     '/mentor',
-    '/mentor/onboarding',
-    '/role-selection'
+    '/mentor/onboarding'
   ]
 
   // Define public routes that don't require authentication
@@ -29,10 +28,18 @@ export async function middleware(req: NextRequest) {
     '/auth',
     '/auth/reset-password',
     '/auth/callback',
-    '/test-navigation'
+    '/test-navigation',
+    '/role-selection'
   ]
 
   const { pathname } = req.nextUrl
+
+  // Special handling for role-selection
+  if (pathname === '/role-selection' && !session) {
+    // If directly accessing role-selection without being logged in,
+    // redirect to home page instead of auth
+    return NextResponse.redirect(new URL('/', req.url))
+  }
 
   // Check if the current path is protected
   const isProtectedRoute = protectedRoutes.some(route =>
@@ -57,15 +64,18 @@ export async function middleware(req: NextRequest) {
   if ((pathname === '/auth' || pathname.startsWith('/auth/')) && session && pathname !== '/auth/callback') {
     const redirectTo = req.nextUrl.searchParams.get('redirectTo')
 
-    if (redirectTo && protectedRoutes.includes(redirectTo)) {
-      return NextResponse.redirect(new URL(redirectTo, req.url))
+    // Check if there's a redirectTo parameter and handle role-selection specially
+    if (redirectTo) {
+      if (redirectTo === '/role-selection' || protectedRoutes.includes(redirectTo)) {
+        return NextResponse.redirect(new URL(redirectTo, req.url))
+      }
     }
 
     // Check if user has a user_type assigned
     const { data: userProfile } = await supabase
       .from('users')
       .select('user_type')
-      .eq('clerk_id', session.user.id)
+      .eq('id', session.user.id)
       .single();
 
     if (userProfile?.user_type === 'mentor') {

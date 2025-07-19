@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { useUser } from "@supabase/auth-helpers-react";
-import { useSupabase } from "@/hooks/use-supabase";
+import { useUser, useSupabaseClient } from "@supabase/auth-helpers-react";
 import { ChevronLeft, GraduationCap, Users } from "lucide-react";
 import { Database } from "@/lib/database.types";
 import { WithErrorBoundary } from "@/components/error-boundary";
@@ -15,14 +14,14 @@ function RoleSelection() {
   const user = useUser();
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const { supabase, isLoading: isSupabaseLoading } = useSupabase();
+  const supabase = useSupabaseClient<Database>();
 
   useEffect(() => {
     const checkUserRole = async () => {
-      if (!user || !supabase) {
-        if (!user) {
-          router.push("/auth");
-        }
+      // If not logged in, just set loading to false to show role options
+      // User will need to authenticate when selecting a role
+      if (!user) {
+        setLoading(false);
         return;
       }
 
@@ -30,7 +29,7 @@ function RoleSelection() {
         const { data: userProfile, error } = await supabase
           .from('users')
           .select('user_type')
-          .eq('clerk_id', user.id)
+          .eq('id', user.id)
           .single();
 
         if (error && error.code !== 'PGRST116') {
@@ -59,55 +58,16 @@ function RoleSelection() {
   }, [user, router, supabase]);
 
   const handleMentorClick = async () => {
-    if (!user || !supabase) return;
+    if (!user) {
+      // If not logged in, redirect to auth with a return path
+      router.push("/auth?redirectTo=/role-selection");
+      return;
+    }
 
     try {
       setLoading(true);
-      // Insert user with mentor role
-      // First check if user already exists
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('*')
-        .eq('clerk_id', user.id)
-        .single();
-
-      // If user exists, update instead of insert
-      let error;
-      if (existingUser) {
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({
-            user_type: 'mentor',
-            email: user.email ?? '',
-            name: user.user_metadata?.name ?? user.email?.split('@')[0] ?? 'User',
-          })
-          .eq('clerk_id', user.id);
-        error = updateError;
-      } else {
-        const { error: insertError } = await supabase
-          .from('users')
-          .insert({
-            clerk_id: user.id,
-            email: user.email ?? '',
-            name: user.user_metadata?.name ?? user.email?.split('@')[0] ?? 'User',
-            user_type: 'mentor',
-            is_active: true,
-            is_verified: false
-          });
-        error = insertError;
-      }
-
-      if (error) {
-        console.error("Error setting mentor role:", error);
-        console.log("Error details:", JSON.stringify(error, null, 2));
-        console.log("User data:", JSON.stringify({
-          id: user.id,
-          email: user.email,
-          metadata: user.user_metadata
-        }, null, 2));
-        return;
-      }
-
+      // No longer save user data here, just redirect to onboarding form
+      // The onboarding form will save the user data including role
       router.push("/mentor/onboarding");
     } catch (error) {
       console.error("Error:", error);
@@ -117,55 +77,16 @@ function RoleSelection() {
   };
 
   const handleStudentClick = async () => {
-    if (!user || !supabase) return;
+    if (!user) {
+      // If not logged in, redirect to auth with a return path
+      router.push("/auth?redirectTo=/role-selection");
+      return;
+    }
 
     try {
       setLoading(true);
-      // Insert user with student role
-      // First check if user already exists
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('*')
-        .eq('clerk_id', user.id)
-        .single();
-
-      // If user exists, update instead of insert
-      let error;
-      if (existingUser) {
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({
-            user_type: 'student',
-            email: user.email ?? '',
-            name: user.user_metadata?.name ?? user.email?.split('@')[0] ?? 'User',
-          })
-          .eq('clerk_id', user.id);
-        error = updateError;
-      } else {
-        const { error: insertError } = await supabase
-          .from('users')
-          .insert({
-            clerk_id: user.id,
-            email: user.email ?? '',
-            name: user.user_metadata?.name ?? user.email?.split('@')[0] ?? 'User',
-            user_type: 'student',
-            is_active: true,
-            is_verified: false
-          });
-        error = insertError;
-      }
-
-      if (error) {
-        console.error("Error setting student role:", error);
-        console.log("Error details:", JSON.stringify(error, null, 2));
-        console.log("User data:", JSON.stringify({
-          id: user.id,
-          email: user.email,
-          metadata: user.user_metadata
-        }, null, 2));
-        return;
-      }
-
+      // No longer save user data here, just redirect to onboarding form
+      // The onboarding form will save the user data including role
       router.push("/mentee-onboard");
     } catch (error) {
       console.error("Error:", error);
@@ -178,8 +99,8 @@ function RoleSelection() {
     router.push("/");
   };
 
-  // Show loading spinner while checking user role or waiting for Supabase
-  if (loading || isSupabaseLoading || !supabase) {
+  // Show loading spinner while checking user role
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
@@ -187,10 +108,15 @@ function RoleSelection() {
     );
   }
 
-  // Redirect to auth if not authenticated
-  if (!user) {
-    return null;
-  }
+  // We no longer redirect non-authenticated users
+  // They will be asked to log in when they click on a role
+  // We'll show different button text when not logged in
+
+  // Customize page title and description based on auth status
+  const pageTitle = user ? "Welcome to Your Learning Journey" : "Choose Your Role to Begin";
+  const pageDescription = user ?
+    "To complete your account setup, please choose your role in our platform" :
+    "Sign in and select your role to get started with personalized learning";
 
   return (
     <div className="min-h-screen bg-white">
@@ -210,10 +136,10 @@ function RoleSelection() {
         {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-4xl font-light text-gray-900 mb-6">
-            Welcome to Your Learning Journey
+            {pageTitle}
           </h1>
           <p className="text-xl text-gray-600 font-light max-w-2xl mx-auto">
-            To complete your account setup, please choose your role in our platform
+            {pageDescription}
           </p>
           <div className="mt-8 text-sm text-gray-500 font-light">
             Select your role → Complete onboarding → Access your personalized dashboard
@@ -244,7 +170,7 @@ function RoleSelection() {
                 disabled={loading}
                 className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg transition-all duration-200 group-hover:scale-105 disabled:opacity-50"
               >
-                {loading ? "Setting up..." : "Continue as a Mentor"}
+                {loading ? "Setting up..." : user ? "Continue as a Mentor" : "Sign in to Continue as a Mentor"}
               </Button>
             </CardContent>
           </Card>
@@ -271,7 +197,7 @@ function RoleSelection() {
                 disabled={loading}
                 className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg transition-all duration-200 group-hover:scale-105 disabled:opacity-50"
               >
-                {loading ? "Setting up..." : "Continue as a Student"}
+                {loading ? "Setting up..." : user ? "Continue as a Student" : "Sign in to Continue as a Student"}
               </Button>
             </CardContent>
           </Card>

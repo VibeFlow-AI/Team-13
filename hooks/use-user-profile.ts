@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSupabase } from './use-supabase';
-import { User, Mentor, Student, getUserByClerkId, getMentorByUserId, getStudentByUserId } from '@/lib/supabase-utils';
+import { User, Mentor, Student, getUserByAuthId, getMentorByUserId, getStudentByUserId } from '@/lib/supabase-utils';
 import { useUser } from '@supabase/auth-helpers-react';
 
 interface UserProfileData {
@@ -48,7 +48,7 @@ export function useUserProfile(): UserProfileData {
         setError(null);
 
         // Get the user record from our database
-        const userData = await getUserByClerkId(clerkUser.id, false);
+        const userData = await getUserByAuthId(clerkUser.id, false);
 
         if (!userData) {
           setIsLoading(false);

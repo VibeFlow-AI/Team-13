@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { Database } from "@/lib/database.types";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -41,6 +41,7 @@ interface QuickLoginUser {
 
 export default function AuthPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = useSupabaseClient<Database>();
 
   const [mode, setMode] = useState<AuthMode>("login");
@@ -71,6 +72,9 @@ export default function AuthPage() {
       role: "STUDENT"
     }
   ];
+
+  // Get query parameters
+  const redirectTo = searchParams.get('redirectTo');
 
   // Debug mode - log any auth errors
   useEffect(() => {
@@ -134,10 +138,17 @@ export default function AuthPage() {
           setMessage({ type: "error", text: error.message });
         } else {
           setMessage({ type: "success", text: "Login successful! Redirecting..." });
-          // Let middleware handle the redirection based on user role
-          setTimeout(() => {
-            router.refresh();
-          }, 1000);
+          // Check if there's a redirectTo parameter
+          if (redirectTo) {
+            setTimeout(() => {
+              router.push(redirectTo);
+            }, 1000);
+          } else {
+            // Let middleware handle the redirection based on user role
+            setTimeout(() => {
+              router.refresh();
+            }, 1000);
+          }
         }
       } else if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
@@ -145,8 +156,7 @@ export default function AuthPage() {
           password: formData.password,
           options: {
             data: {
-              full_name: formData.fullName,
-              role: 'STUDENT' // Default role for new signups
+              full_name: formData.fullName
             },
           },
         });
@@ -156,9 +166,28 @@ export default function AuthPage() {
         } else {
           setMessage({
             type: "success",
-            text: "Account created! Please check your email to verify your account."
+            text: "Account created! Redirecting to role selection..."
           });
-          setMode("login");
+
+          // Automatically sign in after signup
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
+          });
+
+          if (!signInError) {
+            // Redirect to role selection after successful signup and login
+            setTimeout(() => {
+              router.push('/role-selection');
+            }, 1500);
+          } else {
+            // If auto-login fails, switch to login mode
+            setMessage({
+              type: "success",
+              text: "Account created! Please log in to continue."
+            });
+            setMode("login");
+          }
         }
       } else if (mode === "reset") {
         const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useUser, useSupabaseClient } from "@supabase/auth-helpers-react";
+import { Database } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -65,9 +67,12 @@ const STUDENT_LEVELS = [
 
 export default function MentorOnboardingForm() {
   const router = useRouter();
+  const user = useUser();
+  const supabase = useSupabaseClient<Database>();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<MentorFormData>({
     fullName: "",
     age: "",
@@ -115,13 +120,58 @@ export default function MentorOnboardingForm() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    setError(null);
 
     try {
-      // TODO: Persist to backend
-      console.log("Mentor onboarding data:", form);
+      if (!user) {
+        throw new Error("You must be logged in to complete the onboarding process");
+      }
 
-      // Simulate API call delay for smooth UX
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // First save/update the user record with mentor role
+      const { data: existingUser, error: fetchError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw new Error(`Error fetching user: ${fetchError.message}`);
+      }
+
+      // If user exists, update instead of insert
+      let error;
+      if (existingUser) {
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({
+            user_type: 'mentor',
+            email: user.email ?? form.email,
+            name: form.fullName || (user.email?.split('@')[0] ?? 'User'),
+            clerk_id: user.id,
+          })
+          .eq('id', user.id);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({
+            id: user.id,
+            clerk_id: user.id,
+            email: user.email ?? form.email,
+            name: form.fullName || (user.email?.split('@')[0] ?? 'User'),
+            user_type: 'mentor',
+            is_active: true,
+            is_verified: false
+          });
+        error = insertError;
+      }
+
+      if (error) {
+        throw new Error(`Error saving user data: ${error.message}`);
+      }
+
+      // TODO: Save the detailed mentor profile data to the mentors table
+      console.log("Mentor onboarding data:", form);
 
       // Show success overlay
       setShowSuccess(true);
@@ -130,10 +180,10 @@ export default function MentorOnboardingForm() {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Navigate to mentor dashboard
-      router.push("/mentor");
-    } catch (error) {
-      console.error("Error completing mentor onboarding:", error);
-      alert("There was an error completing your mentor application. Please try again.");
+      router.push("/mentor/dashboard");
+    } catch (err) {
+      console.error("Error completing mentor onboarding:", err);
+      setError(err instanceof Error ? err.message : "An unknown error occurred");
       setIsSubmitting(false);
     }
   };
