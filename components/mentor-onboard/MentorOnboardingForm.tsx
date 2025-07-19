@@ -17,7 +17,8 @@ import {
   Sparkles,
   ChevronLeft,
   Upload,
-  Camera
+  Camera,
+  AlertCircle
 } from "lucide-react";
 
 interface MentorFormData {
@@ -131,10 +132,12 @@ export default function MentorOnboardingForm() {
 
       // Navigate to mentor dashboard
       router.push("/mentor");
-    } catch (error) {
-      console.error("Error completing mentor onboarding:", error);
-      alert("There was an error completing your mentor application. Please try again.");
+    } catch (err) {
+      console.error("Error completing mentor onboarding:", err);
+      setError(err instanceof Error ? err.message : "An unknown error occurred");
       setIsSubmitting(false);
+      // Wait a moment before clearing error to ensure user sees it
+      setTimeout(() => setError(null), 5000);
     }
   };
 
@@ -144,6 +147,20 @@ export default function MentorOnboardingForm() {
 
   return (
     <div className="min-h-screen bg-white relative">
+      {/* Error Message */}
+      {error && (
+        <div className="fixed top-4 right-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded shadow-lg z-50 max-w-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <AlertCircle className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Success Overlay */}
       {showSuccess && (
         <div className="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50">

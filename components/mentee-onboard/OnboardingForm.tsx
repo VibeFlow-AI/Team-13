@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useUser, useSupabaseClient } from "@supabase/auth-helpers-react";
+import { Database } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,9 +27,12 @@ interface FormData {
 
 export default function OnboardingForm() {
   const router = useRouter();
+  const user = useUser();
+  const supabase = useSupabaseClient<Database>();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<FormData>({
     name: "",
     email: "",
@@ -58,13 +63,58 @@ export default function OnboardingForm() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    setError(null);
 
     try {
-      // TODO: Persist to backend
-      console.log(form);
+      if (!user) {
+        throw new Error("You must be logged in to complete the onboarding process");
+      }
 
-      // Simulate API call delay for smooth UX
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // First save/update the user record with student role
+      const { data: existingUser, error: fetchError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw new Error(`Error fetching user: ${fetchError.message}`);
+      }
+
+      // If user exists, update instead of insert
+      let error;
+      if (existingUser) {
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({
+            user_type: 'student',
+            email: user.email ?? form.email,
+            name: form.name || (user.email?.split('@')[0] ?? 'User'),
+            clerk_id: user.id,
+          })
+          .eq('id', user.id);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({
+            id: user.id,
+            clerk_id: user.id,
+            email: user.email ?? form.email,
+            name: form.name || (user.email?.split('@')[0] ?? 'User'),
+            user_type: 'student',
+            is_active: true,
+            is_verified: false
+          });
+        error = insertError;
+      }
+
+      if (error) {
+        throw new Error(`Error saving user data: ${error.message}`);
+      }
+
+      // TODO: Save the detailed student profile data to the students table
+      console.log(form);
 
       // Show success overlay
       setShowSuccess(true);
@@ -74,10 +124,12 @@ export default function OnboardingForm() {
 
       // Navigate to dashboard
       router.push("/mentee-dashboard");
-    } catch (error) {
-      console.error("Error completing onboarding:", error);
-      alert("There was an error completing your onboarding. Please try again.");
+    } catch (err) {
+      console.error("Error completing onboarding:", err);
+      setError(err instanceof Error ? err.message : "An unknown error occurred");
       setIsSubmitting(false);
+      // Wait a moment before clearing error to ensure user sees it
+      setTimeout(() => setError(null), 5000);
     }
   };
 
@@ -87,6 +139,20 @@ export default function OnboardingForm() {
 
   return (
     <div className="min-h-screen bg-white relative">
+      {/* Error Message */}
+      {error && (
+        <div className="fixed top-4 right-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded shadow-lg z-50 max-w-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <AlertCircle className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Success Overlay */}
       {showSuccess && (
         <div className="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50">
