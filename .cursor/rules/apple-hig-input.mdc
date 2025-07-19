@@ -1,0 +1,48 @@
+---
+description: Apple Human Interface Guidelines – Input (concise web version)
+alwaysApply: false
+---
+
+# Apple HIG Input (Web-Optimized)
+
+## Text Fields
+• Size field to expected data; optimise keyboards with `inputmode` (`email`, `tel`, `numeric`).
+• Always display a `<label>`; placeholder is an optional hint, not a label.
+• Enable browser autofill via `autocomplete` (e.g., `email`, `postal-code`).
+• Provide a clear-all button (`<button aria-label="Clear">×</button>`).
+
+## Structured Data
+• Dates & times: use native `<input type="date|time">` where supported; provide fallback polyfill.
+• Phone & card numbers: use masking library but allow manual typing for screen readers.
+• Passwords: `<input type="password" autocomplete="current-password">` + visibility toggle.
+
+## Choice Controls
+• 2–5 choices: radio/segmented control inside `<fieldset>`.
+• Long lists: searchable `<select>` or listbox; virtualise >100 items.
+• Multi-select: checkbox list or tag picker; show selected count.
+
+## Validation
+• Validate on blur or after 500 ms pause; never on every keystroke.
+• Indicate errors with color, icon, and text (`role="alert"`); maintain ≥4.5 : 1 contrast.
+• On submit failure, focus the first invalid field; keep valid input intact.
+
+## Form Flow
+• Vertical stack, 8 px gap between fields, 24 px between logical groups.
+• Natural tab order; `Enter` submits when form is valid.
+• Either disable action buttons until valid **or** allow click then surface errors—pick one pattern consistently.
+
+## Accessibility
+• Each control has semantic label; group related inputs with `<fieldset>` + `<legend>`.
+• Announce validation updates via `aria-live="polite"` region.
+• Keep focus outline visible (`:focus-visible`); don't rely on color alone.
+• Hit targets ≥44 px; maintain 8 px minimum spacing.
+
+## File & Rich Inputs
+• Use `accept` to limit file types; verify size before upload.
+• Show upload progress with cancel option.
+• Rich-text editor: expose bold/italic/list buttons with `aria-pressed` and keyboard shortcuts (⌘/Ctrl +B, ⌘/Ctrl +I).
+
+- Handle paste operations from other applications
+- Provide clear file type and size restrictions for uploads
+- Show upload progress and allow cancellation
+- Validate file types before upload

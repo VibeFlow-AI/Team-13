@@ -1,0 +1,30 @@
+# Lifecycle-Aligned Prompt Cheat-Sheet
+
+Use these miniature prompt blueprints while coding. Pick the phase you’re in, copy the pattern, fill the brackets, run.
+
+## 1. Design / Architecture
+• **Mermaid sequence** –  "Generate a Mermaid sequence diagram for <feature>…"
+• **C4 container** –  "Produce PlantUML C4 container diagram for <system>…"
+• **SOLID Enforcement** –  "Design the classes keeping SOLID; explain SRP & DRY usage."
+
+## 2. Code Generation
+• **Module stub** –  "Create <lang> module <name> with: fn list, doc-strings, tests."
+• **Style gate** –  "Rewrite snippet to conform to <guide> (PEP8 / ESLint)."
+• **TDD loop** –  1) Paste failing test, 2) Ask: "Implement to pass all tests."
+
+## 3. Refactor / Optimise
+• **Complexity check** –  "Spot O(n²) parts & propose faster algo w/ Big-O."
+• **Security scan** –  "Review code for OWASP Top-10; output issues + fixes."
+
+## 4. Debug & Root-Cause
+Template:
+1. *Context*: "Here is stack trace …"
+2. *Ask*: "List hypotheses → 1/2/3"
+3. *Propose fix* – patch diff + why it works.
+
+## How to Apply
+1. Copy pattern ➜ replace <> with specifics.
+2. Keep prompts short, single goal.
+3. Chain if needed: design → code → tests → docs.
+
+*(Rule intended for interactive use inside Cursor; not auto-applied.)*

@@ -1,0 +1,38 @@
+---
+description: Apple Human Interface Guidelines – Foundations (concise web version)
+alwaysApply: false
+---
+
+# Apple HIG Foundations (Web-Optimized)
+
+## Color
+• Use CSS custom properties (e.g., `--color-surface`) that map to system colors and switch automatically via `prefers-color-scheme`.
+• Maintain contrast ≥ 4.5 : 1 for body text, ≥ 3 : 1 for large/bold text.
+• Never rely on color alone—pair status colors with text or icons.
+• Restrict the primary accent color to one or two elements per view to keep the hierarchy clear.
+
+## Typography
+• Base font-size: 16 px (`html { font-size: 100%; }`).
+• Responsive scaling: use `clamp()` or `fluid-type` utilities.
+• Font stack: `"SF Pro Text", "Helvetica Neue", Arial, sans-serif` (macOS/iOS look-alike, graceful fallback).
+• Preferred weights: 400, 500, 600, 700 – avoid ultra-thin/light.
+• Support OS text size / browser zoom; avoid fixed-px heights.
+
+## Layout & Spacing
+• Compose with Flexbox/Grid and logical properties (`margin-block`, `padding-inline`).
+• Maintain an 8 px spacing scale; minimum hit-target 44 px × 44 px.
+• Limit reading width to ~60 ch; use `max-width` tokens.
+• Place primary actions along the natural reading flow (top ➜ bottom, start ➜ end).
+• Prefer intrinsic layouts (`minmax()`, `auto-fit`) over breakpoint-heavy designs.
+
+## Surfaces & Elevation
+• Use translucent backgrounds + `backdrop-filter: blur(20px)` for nav/toolbars; **never** on main content.
+• Apply shadows/elevation only for overlays (modals, popovers) to signal layering.
+• Honor `prefers-reduced-motion`; fall back to opacity/fade where blur/scale is heavy.
+
+## Accessibility
+• Use semantic HTML first; ARIA only to patch gaps.
+• Provide accessible names for all interactive elements (`<label>` / `aria-label`).
+• Keep visible focus rings; contrast ≥ 3 : 1.
+• Full keyboard support: `Tab` order logical, arrow keys inside composite widgets.
+• Add alt text for icons/images; avoid conveying meaning in decorative assets.
