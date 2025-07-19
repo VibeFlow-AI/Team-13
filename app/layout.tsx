@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import Providers from "@/components/Providers";
 import "./globals.css";
+import StudentNavbar from "@/components/common/student-navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,7 +40,12 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers session={session}>{children}</Providers>
+        <Providers session={session}>
+          {/* Global student navbar */}
+          {/* TODO: Replace hard-coded sessionCount with real data when available */}
+          <StudentNavbar />
+          {children}
+        </Providers>
       </body>
     </html>
   );
