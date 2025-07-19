@@ -1,5 +1,9 @@
 import MentorBooking from '@/components/mentee/booking'
 
 export default function BookingPage() {
-  return <MentorBooking />
+  return (
+    <div>
+      <MentorBooking />
+    </div>
+  )
 } 
