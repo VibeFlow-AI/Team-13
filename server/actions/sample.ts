@@ -13,8 +13,9 @@ export async function addSample(formData: FormData) {
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
-    .from("sample")
+    .from("samples")
     .insert({ id })
+    .select()
     .single();
 
   if (error) {
@@ -29,7 +30,7 @@ export async function addSample(formData: FormData) {
 export async function deleteSample(id: string) {
   const supabase = await createSupabaseServerClient();
 
-  const { error } = await supabase.from("sample").delete().eq("id", id);
+  const { error } = await supabase.from("samples").delete().eq("id", id);
 
   if (error) {
     console.error("Error deleting sample:", error);

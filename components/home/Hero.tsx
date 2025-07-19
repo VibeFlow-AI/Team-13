@@ -1,13 +1,22 @@
+'use client';
+
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 const Hero = () => {
+  const router = useRouter();
+
+  const handleGetStarted = () => {
+    router.push('/role-selection');
+  };
+
   return (
     <section className="mt-[88px] mx-[13px] max-md:max-w-full max-md:mr-2.5 max-md:mt-10" aria-labelledby="hero-heading">
       <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
         <div className="w-[59%] max-md:w-full max-md:ml-0">
           <div className="flex w-full flex-col items-stretch mt-7 max-md:max-w-full max-md:mt-10">
             <div className="relative w-full text-black max-md:max-w-full">
-              <h1 
+              <h1
                 id="hero-heading"
                 className="text-[84px] font-medium leading-[95px] tracking-[-6.72px] z-0 max-md:max-w-full max-md:text-[40px] max-md:leading-[50px]"
               >
@@ -24,7 +33,8 @@ const Hero = () => {
                 EduVibe connects students with experienced mentors to guide them through their academic
               </p>
             </div>
-            <button 
+            <button
+              onClick={handleGetStarted}
               className="bg-black flex items-center gap-2.5 text-[32px] text-[rgba(216,216,216,1)] font-medium tracking-[-1.92px] leading-none justify-center mt-[50px] px-[35px] py-2.5 rounded-[9px] max-md:mt-10 max-md:px-5 hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-600"
               aria-label="Get started with personalized mentorship"
             >

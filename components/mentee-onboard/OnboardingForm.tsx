@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, User, GraduationCap, Target, ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
+import { CheckCircle, User, GraduationCap, Target, ArrowLeft, ArrowRight, Sparkles, ChevronLeft } from "lucide-react";
 
 interface FormData {
   name: string;
@@ -23,7 +24,10 @@ interface FormData {
 }
 
 export default function OnboardingForm() {
+  const router = useRouter();
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [form, setForm] = useState<FormData>({
     name: "",
     email: "",
@@ -39,17 +43,42 @@ export default function OnboardingForm() {
   });
 
   const next = () => setStep((s) => Math.min(s + 1, 3));
-  const back = () => setStep((s) => Math.max(s - 1, 1));
+  const back = () => {
+    if (step === 1) {
+      router.push("/role-selection");
+    } else {
+      setStep((s) => Math.max(s - 1, 1));
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = () => {
-    // TODO: Persist to backend
-    console.log(form);
-    alert("Onboarding complete! (Data logged to console)");
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+
+    try {
+      // TODO: Persist to backend
+      console.log(form);
+
+      // Simulate API call delay for smooth UX
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Show success overlay
+      setShowSuccess(true);
+
+      // Wait a moment before navigation
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Navigate to dashboard
+      router.push("/mentee-dashboard");
+    } catch (error) {
+      console.error("Error completing onboarding:", error);
+      alert("There was an error completing your onboarding. Please try again.");
+      setIsSubmitting(false);
+    }
   };
 
   const stepIcons = [User, GraduationCap, Target];
@@ -57,8 +86,33 @@ export default function OnboardingForm() {
   const progress = (step / 3) * 100;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white relative">
+      {/* Success Overlay */}
+      {showSuccess && (
+        <div className="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="text-2xl font-light text-gray-900 mb-2">Welcome aboard!</h2>
+            <p className="text-gray-600 font-light">Taking you to your dashboard...</p>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto px-6 py-16">
+        {/* Back to Role Selection */}
+        <div className="mb-8">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/role-selection")}
+            className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 gap-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Back to role selection
+          </Button>
+        </div>
+
         {/* Hero Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full text-gray-600 text-sm font-medium mb-6">
@@ -360,11 +414,20 @@ export default function OnboardingForm() {
                 ) : (
                   <Button
                     onClick={handleSubmit}
-                    disabled={!form.objectives.trim()}
+                    disabled={!form.objectives.trim() || isSubmitting}
                     className="h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors font-medium"
                   >
-                    Complete Setup
-                    <CheckCircle className="h-4 w-4 ml-2" />
+                    {isSubmitting ? (
+                      <>
+                        <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                        Setting up...
+                      </>
+                    ) : (
+                      <>
+                        Complete Setup
+                        <CheckCircle className="h-4 w-4 ml-2" />
+                      </>
+                    )}
                   </Button>
                 )}
               </div>

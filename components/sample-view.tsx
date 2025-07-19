@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sample } from "@/lib/generated/prisma";
+import { Database } from "@/lib/database.types";
 import { addSample, deleteSample } from "@/server/actions/sample";
 import { BookOpen, Plus, Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
@@ -18,7 +18,7 @@ import { useState, useTransition } from "react";
 export default function SampleView({
   initialSamples,
 }: {
-  initialSamples: Sample[];
+  initialSamples: Database['public']['Tables']['samples']['Row'][];
 }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -45,7 +45,8 @@ export default function SampleView({
     });
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",

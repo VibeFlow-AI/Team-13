@@ -1,6 +1,27 @@
+'use client';
+
 import React from 'react';
+import { useRouter } from 'next/navigation';
+import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
 
 const Header = () => {
+  const router = useRouter();
+  const supabase = useSupabaseClient();
+  const user = useUser();
+
+  const handleGetStarted = () => {
+    if (user) {
+      router.push('/role-selection');
+    } else {
+      router.push('/auth');
+    }
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
+  };
+
   return (
     <header className="bg-white flex w-full items-center justify-between text-2xl tracking-[-1.42px] leading-none flex-wrap pl-20 pr-3 py-[23px] rounded-[0px_0px_20px_20px] max-md:max-w-full max-md:pl-5">
       <a
@@ -36,12 +57,26 @@ const Header = () => {
           <span className="self-stretch my-auto">About</span>
         </a>
       </nav>
-      <button
-        className="bg-black flex items-center me-3 text-[rgba(216,216,216,1)] font-medium justify-center px-5 py-2.5 rounded-[9px] hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-600"
-        aria-label="Get started with EduVibe"
-      >
-        <span className="self-stretch my-auto">Get Started</span>
-      </button>
+      {user ? (
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-600">Welcome, {user.email}</span>
+          <button
+            onClick={handleSignOut}
+            className="bg-gray-200 flex items-center text-gray-700 font-medium justify-center px-4 py-2 rounded-[9px] hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-600"
+            aria-label="Sign out"
+          >
+            <span className="self-stretch my-auto">Sign Out</span>
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={handleGetStarted}
+          className="bg-black flex items-center me-3 text-[rgba(216,216,216,1)] font-medium justify-center px-5 py-2.5 rounded-[9px] hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-600"
+          aria-label="Get started with EduVibe"
+        >
+          <span className="self-stretch my-auto">Get Started</span>
+        </button>
+      )}
     </header>
   );
 };
