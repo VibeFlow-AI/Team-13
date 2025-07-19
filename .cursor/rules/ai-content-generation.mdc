@@ -1,0 +1,502 @@
+---
+description: # AI Content Generation - Educational Intelligence System
+globs: 
+alwaysApply: false
+---
+# AI Content Generation - Educational Intelligence System
+
+## AI-Powered Question Generation
+
+### Question Generation Pipeline
+```typescript
+interface QuestionGenerationPipeline {
+  // Input configuration
+  request: GenerationRequest;
+  
+  // Processing stages
+  curriculumAnalysis: CurriculumMapping;
+  contentExtraction: ContentAnalysis;
+  questionGeneration: QuestionCreation;
+  qualityAssurance: QualityCheck;
+  localization: LanguageAdaptation;
+  
+  // Output
+  generatedQuestions: AIGeneratedQuestion[];
+  metadata: GenerationMetadata;
+}
+
+interface GenerationRequest {
+  // Basic parameters
+  subject: Subject;
+  grade: number;
+  topics: string[];
+  subtopics?: string[];
+  questionCount: number;
+  
+  // Difficulty and distribution
+  targetDifficulty: DifficultyTarget;
+  bloomsLevels: BloomsTaxonomy[];
+  questionTypes: QuestionType[];
+  
+  // Context and constraints
+  curriculum: 'Local' ;
+  languageMedium: 'Sinhala' | 'Tamil' | 'English';
+  culturalContext: boolean;
+  avoidDuplicates: string[]; // Previously generated question IDs
+  
+  // Personalization
+  studentProfile?: StudentProfile;
+  weaknessAreas?: string[];
+  learningObjectives?: string[];
+  
+  // Quality requirements
+  minQuality: number; // 0-1 scale
+  requireExplanations: boolean;
+  includeHints: boolean;
+  multilingualSupport: boolean;
+}
+```
+
+### Intelligent Content Analysis
+```typescript
+interface ContentAnalysis {
+  sourceId: string;
+  contentType: 'Textbook' | 'Syllabus' | 'PastPaper' | 'TeacherNotes' | 'Video' | 'Article';
+  
+  // Extracted information
+  topics: ExtractedTopic[];
+  concepts: ConceptMapping[];
+  learningObjectives: string[];
+  keyTerms: KeyTerm[];
+  
+  // Question potential
+  questionableSegments: QuestionableContent[];
+  difficultyEstimation: DifficultyMapping;
+  bloomsMapping: BloomsMapping;
+  
+  // Sri Lankan curriculum alignment
+  syllabusAlignment: SyllabusMapping;
+  gradeAppropriate: boolean;
+  culturalRelevance: number; // 0-1 scale
+}
+
+interface ExtractedTopic {
+  name: string;
+  description: string;
+  prerequisites: string[];
+  keyPoints: string[];
+  examples: string[];
+  commonMisconceptions: string[];
+  difficultyLevel: number;
+  timeToLearn: number; // estimated minutes
+}
+
+interface QuestionableContent {
+  content: string;
+  potentialQuestions: QuestionSeed[];
+  difficulty: number;
+  bloomsLevel: BloomsTaxonomy;
+  topicRelevance: number;
+  qualityScore: number;
+}
+```
+
+### AI Question Templates & Patterns
+```typescript
+interface QuestionTemplate {
+  id: string;
+  name: string;
+  questionType: QuestionType;
+  subject: Subject;
+  pattern: string; // Template with placeholders
+  
+  // Template variables
+  variables: TemplateVariable[];
+  constraints: TemplateConstraint[];
+  
+  // Quality metrics
+  successRate: number; // How often it generates good questions
+  studentEngagement: number; // Student feedback on questions
+  difficultyPredictability: number; // How well difficulty is predicted
+  
+  // Sri Lankan context
+  culturallyAppropriate: boolean;
+  languageComplexity: 'Simple' | 'Moderate' | 'Complex';
+  localExamples: string[];
+}
+
+interface TemplateVariable {
+  name: string;
+  type: 'Number' | 'Text' | 'List' | 'Concept' | 'Example';
+  constraints: VariableConstraint[];
+  source: 'Random' | 'Curriculum' | 'StudentProfile' | 'ContextualExamples';
+}
+
+// Example templates for different subjects
+const MATH_TEMPLATES = {
+  algebraBasic: "Solve for x: {coefficient}x + {constant1} = {constant2}",
+  geometryArea: "Find the area of a {shape} with {dimension1} = {value1} and {dimension2} = {value2}",
+  percentageApplication: "A {contextItem} costs Rs. {originalPrice}. If there is a {percentage}% {discountOrIncrease}, what is the new price?"
+};
+
+const SCIENCE_TEMPLATES = {
+  definitionCheck: "What is {scientificTerm}? Explain with an example from {localContext}",
+  causeEffect: "What happens when {condition} occurs in {system}? Explain the {process}",
+  classification: "Classify the following {items} based on their {classificationCriteria}: {itemList}"
+};
+```
+
+### Quality Assurance & Validation
+```typescript
+interface QualityAssessment {
+  // Automatic quality checks
+  grammarCheck: GrammarAnalysis;
+  factualAccuracy: FactCheckResult;
+  difficultyValidation: DifficultyValidation;
+  curriculumAlignment: AlignmentCheck;
+  
+  // Educational quality
+  clearInstructions: boolean;
+  unambiguousAnswer: boolean;
+  appropriateComplexity: boolean;
+  learningObjectiveMet: boolean;
+  
+  // Cultural sensitivity
+  culturallyAppropriate: boolean;
+  languageAppropriate: boolean;
+  noStereotypes: boolean;
+  inclusive: boolean;
+  
+  // Overall scores
+  qualityScore: number; // 0-1
+  confidenceLevel: number; // 0-1
+  humanReviewRequired: boolean;
+}
+
+interface AIQualityFilter {
+  minimumQuality: number;
+  blacklistTerms: string[];
+  requiredElements: QualityElement[];
+  
+  // Auto-rejection criteria
+  tooSimilarThreshold: number;
+  complexityMismatch: boolean;
+  factualUncertainty: number;
+  
+  // Human review triggers
+  controversialTopic: boolean;
+  newConcept: boolean;
+  qualityBelowThreshold: boolean;
+}
+```
+
+## Adaptive Learning Intelligence
+
+### Personalized Content Recommendation
+```typescript
+interface PersonalizationEngine {
+  studentProfile: StudentProfile;
+  learningHistory: LearningHistory;
+  currentPerformance: PerformanceMetrics;
+  
+  // Recommendation algorithms
+  contentRecommendation: ContentRecommendation[];
+  difficultyRecommendation: DifficultyRecommendation;
+  studyPathRecommendation: StudyPath;
+  
+  // Real-time adaptation
+  adaptationTriggers: AdaptationTrigger[];
+  interventionStrategies: InterventionStrategy[];
+}
+
+interface ContentRecommendation {
+  type: 'Question' | 'Practice' | 'Review' | 'Concept' | 'Remediation';
+  content: RecommendedContent;
+  reason: string;
+  priority: number; // 0-1
+  estimatedBenefit: number; // 0-1
+  timeEstimate: number; // minutes
+}
+
+interface AdaptationTrigger {
+  condition: string; // e.g., "3 consecutive wrong answers"
+  action: AdaptationAction;
+  priority: 'High' | 'Medium' | 'Low';
+  cooldown: number; // minutes before same trigger can fire again
+}
+
+type AdaptationAction = 
+  | 'ReduceDifficulty'
+  | 'ProvideHint'
+  | 'ShowExplanation'
+  | 'SuggestBreak'
+  | 'ChangeQuestionType'
+  | 'ReviewPrerequisites'
+  | 'CallTutorAttention';
+```
+
+### Intelligent Tutoring System
+```typescript
+interface AITutor {
+  // Student interaction
+  studentId: string;
+  currentSession: TutoringSession;
+  conversationHistory: TutorMessage[];
+  
+  // Teaching strategies
+  pedagogy: TeachingStrategy;
+  adaptiveResponses: ResponsePattern[];
+  interventions: TutorIntervention[];
+  
+  // Knowledge tracking
+  studentModel: StudentKnowledgeModel;
+  masteryTracking: MasteryTracker;
+  misconceptionDetection: MisconceptionDetector;
+}
+
+interface TutoringSession {
+  sessionId: string;
+  startTime: Date;
+  currentTopic: string;
+  learningObjectives: string[];
+  
+  // Session progress
+  questionsAsked: number;
+  correctAnswers: number;
+  hintsGiven: number;
+  conceptsIntroduced: string[];
+  
+  // Real-time metrics
+  engagementLevel: number; // 0-1
+  frustractionLevel: number; // 0-1
+  comprehensionLevel: number; // 0-1
+  
+  // Adaptive adjustments made
+  difficultyAdjustments: DifficultyAdjustment[];
+  strategyChanges: StrategyChange[];
+}
+
+interface StudentKnowledgeModel {
+  // Knowledge state
+  masteredConcepts: Set<string>;
+  partiallyMasteredConcepts: Map<string, number>; // concept -> mastery level
+  unknownConcepts: Set<string>;
+  
+  // Learning characteristics
+  preferredLearningStyle: LearningStyle;
+  processingSpeed: 'Slow' | 'Average' | 'Fast';
+  attentionSpan: number; // minutes
+  motivationLevel: number; // 0-1
+  
+  // Error patterns
+  commonMistakes: MistakePattern[];
+  misconceptions: Misconception[];
+  learningBlockers: LearningBlocker[];
+}
+```
+
+## Curriculum Intelligence & Mapping
+
+### Automated Curriculum Analysis
+```typescript
+interface CurriculumMapper {
+  // Source curriculum documents
+  syllabusDocuments: CurriculumDocument[];
+  examPatterns: ExamPatternAnalysis[];
+  competencyFrameworks: CompetencyFramework[];
+  
+  // Mapped structure
+  topicHierarchy: TopicHierarchy;
+  learningProgression: LearningProgression;
+  assessmentAlignment: AssessmentAlignment;
+  
+  // Cross-reference capabilities
+  topicDependencies: TopicDependency[];
+  conceptConnections: ConceptConnection[];
+  skillProgression: SkillProgression[];
+}
+
+interface LearningProgression {
+  subject: Subject;
+  gradeRange: [number, number];
+  
+  progression: ProgressionLevel[];
+  prerequisites: PrerequisiteMapping[];
+  assessmentPoints: AssessmentPoint[];
+  
+  // Adaptive pathways
+  alternativeRoutes: AlternativeRoute[];
+  acceleratedPath: AcceleratedPath;
+  remediationPath: RemediationPath;
+}
+
+interface TopicDependency {
+  topic: string;
+  prerequisites: string[];
+  dependents: string[];
+  difficulty: number;
+  cognitiveLoad: number;
+  estimatedLearningTime: number;
+}
+```
+
+### Content Gap Analysis
+```typescript
+interface ContentGapAnalyzer {
+  // Analysis scope
+  targetCurriculum: CurriculumDocument;
+  availableContent: ContentInventory;
+  studentNeeds: StudentNeedsAnalysis;
+  
+  // Identified gaps
+  missingTopics: string[];
+  underwhelmedTopics: UnderwhelmedTopic[];
+  overpresentedTopics: OverpresentedTopic[];
+  
+  // Recommendations
+  contentCreationPriority: ContentPriority[];
+  qualityImprovements: QualityImprovement[];
+  distributionOptimization: DistributionOptimization[];
+}
+
+interface ContentGeneration {
+  // Automatic content creation
+  gapFilling: GapFillingGenerator;
+  diversityEnhancement: DiversityEnhancer;
+  qualityUpgrading: QualityUpgrader;
+  
+  // Batch operations
+  bulkGeneration: BulkGenerationTask[];
+  scheduledGeneration: ScheduledTask[];
+  
+  // Quality assurance
+  generatedContentReview: ReviewQueue[];
+  humanValidationRequired: ValidationTask[];
+}
+```
+
+## AI-Powered Analytics & Insights
+
+### Learning Pattern Recognition
+```typescript
+interface LearningPatternAnalyzer {
+  // Pattern detection
+  studyPatterns: StudyPattern[];
+  performancePatterns: PerformancePattern[];
+  engagementPatterns: EngagementPattern[];
+  errorPatterns: ErrorPattern[];
+  
+  // Predictive insights
+  riskPrediction: RiskPrediction[];
+  successPrediction: SuccessPrediction[];
+  interventionRecommendation: InterventionRecommendation[];
+  
+  // Comparative analysis
+  peerComparison: PeerAnalysis;
+  historicalComparison: HistoricalAnalysis;
+  benchmarkComparison: BenchmarkAnalysis;
+}
+
+interface PredictiveAnalytics {
+  // Performance prediction
+  gradePrediction: GradePrediction;
+  examPerformancePrediction: ExamPrediction;
+  dropoutRiskPrediction: DropoutRisk;
+  
+  // Intervention timing
+  optimalInterventionTiming: InterventionTiming[];
+  resourceAllocationOptimization: ResourceOptimization;
+  tutorAttentionPriority: AttentionPriority[];
+  
+  // Long-term planning
+  careerGuidanceInsights: CareerInsight[];
+  subjectRecommendations: SubjectRecommendation[];
+  studyPlanOptimization: StudyPlanOptimization;
+}
+```
+
+## Implementation Best Practices
+
+### AI Service Architecture
+```typescript
+// Service integration patterns
+class AIContentService {
+  private questionGenerator: QuestionGenerator;
+  private qualityAssessor: QualityAssessor;
+  private personalizationEngine: PersonalizationEngine;
+  private curriculumMapper: CurriculumMapper;
+  
+  async generateQuestions(request: GenerationRequest): Promise<AIGeneratedQuestion[]> {
+    // Validate request
+    const validation = await this.validateRequest(request);
+    if (!validation.valid) throw new Error(validation.error);
+    
+    // Generate questions
+    const questions = await this.questionGenerator.generate(request);
+    
+    // Quality assurance
+    const qualityChecked = await this.qualityAssessor.assess(questions);
+    
+    // Personalization
+    const personalized = await this.personalizationEngine.adapt(qualityChecked, request.studentProfile);
+    
+    return personalized;
+  }
+  
+  async adaptDifficulty(studentId: string, currentPerformance: PerformanceData): Promise<DifficultyRecommendation> {
+    const studentModel = await this.getStudentModel(studentId);
+    return this.personalizationEngine.recommendDifficulty(studentModel, currentPerformance);
+  }
+}
+```
+
+### Error Handling & Fallbacks
+```typescript
+interface AIServiceConfig {
+  // Fallback strategies
+  fallbackToTemplates: boolean;
+  humanReviewThreshold: number;
+  qualityMinimum: number;
+  
+  // Performance settings
+  generationTimeout: number;
+  batchSize: number;
+  concurrentRequests: number;
+  
+  // Safety settings
+  contentFiltering: boolean;
+  biasDetection: boolean;
+  factCheckingEnabled: boolean;
+  culturalSensitivityCheck: boolean;
+}
+
+// Graceful degradation patterns
+class RobustAIService {
+  async generateWithFallback(request: GenerationRequest): Promise<Question[]> {
+    try {
+      // Try AI generation first
+      return await this.aiGenerate(request);
+    } catch (aiError) {
+      console.warn('AI generation failed, falling back to templates', aiError);
+      
+      try {
+        // Fallback to template-based generation
+        return await this.templateGenerate(request);
+      } catch (templateError) {
+        console.warn('Template generation failed, using question bank', templateError);
+        
+        // Final fallback to existing question bank
+        return await this.bankGenerate(request);
+      }
+    }
+  }
+}
+```
+
+### Performance Optimization
+- **Caching Strategy**: Cache generated content, curriculum mappings, and student models
+- **Batch Processing**: Generate multiple questions in single API calls
+- **Progressive Enhancement**: Start with basic AI, enhance with more sophisticated models
+- **Offline Capability**: Store generated content for offline use
+- **Load Balancing**: Distribute AI processing across multiple services
+- **Quality Queues**: Process different quality levels with appropriate resources

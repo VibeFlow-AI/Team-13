@@ -1,0 +1,408 @@
+---
+description: Use **Zag.js** for headless UI state machines that provide accessibility and interaction patterns.
+globs: 
+alwaysApply: false
+---
+# Zag.js Integration Rules
+
+Use **Zag.js** for headless UI state machines that provide accessibility and interaction patterns.
+
+## Core Concepts
+
+### Machine-based Architecture
+```svelte
+<script lang="ts">
+  import * as tooltip from "@zag-js/tooltip";
+  import { useMachine, normalizeProps } from "@zag-js/svelte";
+
+  // Create machine instance
+  const service = useMachine(tooltip.machine, { 
+    id: "tooltip-1",
+    // Initial context
+  });
+
+  // Connect machine to UI (reactive)
+  const api = $derived(tooltip.connect(service, normalizeProps));
+</script>
+```
+
+### Common Machines
+
+#### Tooltip
+```svelte
+<script lang="ts">
+  import * as tooltip from "@zag-js/tooltip";
+  import { useMachine, normalizeProps } from "@zag-js/svelte";
+
+  let { id = "tooltip", content } = $props();
+  
+  const service = useMachine(tooltip.machine, { id });
+  const api = $derived(tooltip.connect(service, normalizeProps));
+</script>
+
+<div {...api.getRootProps()}>
+  <button {...api.getTriggerProps()}>
+    <slot />
+  </button>
+  
+  {#if api.open}
+    <div {...api.getPositionerProps()}>
+      <div {...api.getContentProps()}>
+        {content}
+      </div>
+    </div>
+  {/if}
+</div>
+```
+
+#### Modal/Dialog
+```svelte
+<script lang="ts">
+  import * as dialog from "@zag-js/dialog";
+  import { useMachine, normalizeProps } from "@zag-js/svelte";
+
+  let { open = $bindable(false) } = $props();
+  
+  const service = useMachine(dialog.machine, { 
+    id: "dialog",
+    open
+  });
+  
+  const api = $derived(dialog.connect(service, normalizeProps));
+  
+  // Sync external open state
+  $effect(() => {
+    if (open !== api.open) {
+      if (open) api.open();
+      else api.close();
+    }
+  });
+  
+  // Update external state when internal changes
+  $effect(() => {
+    open = api.open;
+  });
+</script>
+
+{#if api.open}
+  <div {...api.getBackdropProps()}>
+    <div {...api.getPositionerProps()}>
+      <div {...api.getContentProps()}>
+        {#snippet header()}
+          <h2 {...api.getTitleProps()}>
+            <slot name="title" />
+          </h2>
+          <button {...api.getCloseTriggerProps()}>×</button>
+        {/snippet}
+        
+        <div {...api.getDescriptionProps()}>
+          <slot />
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
+```
+
+#### Dropdown Menu
+```svelte
+<script lang="ts">
+  import * as menu from "@zag-js/menu";
+  import { useMachine, normalizeProps } from "@zag-js/svelte";
+
+  let { items = [] } = $props();
+  
+  const service = useMachine(menu.machine, { id: "menu" });
+  const api = $derived(menu.connect(service, normalizeProps));
+</script>
+
+<div>
+  <button {...api.getTriggerProps()}>
+    <slot name="trigger">Menu</slot>
+  </button>
+  
+  {#if api.open}
+    <div {...api.getPositionerProps()}>
+      <div {...api.getContentProps()}>
+        {#each items as item}
+          <div 
+            {...api.getItemProps({ value: item.value })}
+            onclick={() => item.onSelect?.(item)}
+          >
+            {item.label}
+          </div>
+        {/each}
+      </div>
+    </div>
+  {/if}
+</div>
+```
+
+## Advanced Patterns
+
+### Form Controls
+
+#### Checkbox
+```svelte
+<script lang="ts">
+  import * as checkbox from "@zag-js/checkbox";
+  import { useMachine, normalizeProps } from "@zag-js/svelte";
+
+  let { checked = $bindable(false), label } = $props();
+  
+  const service = useMachine(checkbox.machine, { 
+    id: "checkbox",
+    checked 
+  });
+  
+  const api = $derived(checkbox.connect(service, normalizeProps));
+  
+  $effect(() => {
+    checked = api.checked;
+  });
+</script>
+
+<label {...api.getRootProps()}>
+  <div {...api.getControlProps()}>
+    <input {...api.getHiddenInputProps()} />
+    {#if api.checked}
+      <svg {...api.getIndicatorProps()}>
+        <!-- Checkmark icon -->
+      </svg>
+    {/if}
+  </div>
+  <span {...api.getLabelProps()}>{label}</span>
+</label>
+```
+
+#### Slider
+```svelte
+<script lang="ts">
+  import * as slider from "@zag-js/slider";
+  import { useMachine, normalizeProps } from "@zag-js/svelte";
+
+  let { value = $bindable([50]), min = 0, max = 100 } = $props();
+  
+  const service = useMachine(slider.machine, { 
+    id: "slider",
+    value,
+    min,
+    max
+  });
+  
+  const api = $derived(slider.connect(service, normalizeProps));
+  
+  $effect(() => {
+    value = api.value;
+  });
+</script>
+
+<div {...api.getRootProps()}>
+  <label {...api.getLabelProps()}>Volume</label>
+  <div {...api.getControlProps()}>
+    <div {...api.getTrackProps()}>
+      <div {...api.getRangeProps()}></div>
+    </div>
+    <div {...api.getThumbProps({ index: 0 })}>
+      <input {...api.getHiddenInputProps({ index: 0 })} />
+    </div>
+  </div>
+  <output {...api.getValueTextProps()}>{api.value[0]}</output>
+</div>
+```
+
+### Data Entry
+
+#### Combobox/Autocomplete
+```svelte
+<script lang="ts">
+  import * as combobox from "@zag-js/combobox";
+  import { useMachine, normalizeProps } from "@zag-js/svelte";
+
+  let { options = [], value = $bindable('') } = $props();
+  
+  const service = useMachine(combobox.machine, { 
+    id: "combobox",
+    collection: combobox.collection({ items: options })
+  });
+  
+  const api = $derived(combobox.connect(service, normalizeProps));
+  
+  let filteredOptions = $derived(
+    options.filter(option => 
+      option.label.toLowerCase().includes(api.inputValue.toLowerCase())
+    )
+  );
+</script>
+
+<div {...api.getRootProps()}>
+  <label {...api.getLabelProps()}>Choose option</label>
+  <div {...api.getControlProps()}>
+    <input {...api.getInputProps()} />
+    <button {...api.getTriggerProps()}>▼</button>
+  </div>
+  
+  {#if api.open}
+    <div {...api.getPositionerProps()}>
+      <ul {...api.getContentProps()}>
+        {#each filteredOptions as option}
+          <li 
+            {...api.getItemProps({ item: option })}
+            onclick={() => api.selectItem(option)}
+          >
+            {option.label}
+          </li>
+        {/each}
+      </ul>
+    </div>
+  {/if}
+</div>
+```
+
+## Integration with Skeleton Components
+
+### Enhanced Skeleton Components
+```svelte
+<!-- ZagTooltip.svelte - Enhanced Skeleton Button with Zag tooltip -->
+<script lang="ts">
+  import { Button } from '@skeletonlabs/skeleton-svelte';
+  import * as tooltip from "@zag-js/tooltip";
+  import { useMachine, normalizeProps } from "@zag-js/svelte";
+
+  let { tooltip: tooltipText, ...buttonProps } = $props();
+  
+  const service = useMachine(tooltip.machine, { id: "button-tooltip" });
+  const api = $derived(tooltip.connect(service, normalizeProps));
+</script>
+
+<div {...api.getRootProps()}>
+  <Button {...api.getTriggerProps()} {...buttonProps}>
+    <slot />
+  </Button>
+  
+  {#if api.open && tooltipText}
+    <div {...api.getPositionerProps()}>
+      <div {...api.getContentProps()} class="bg-surface-900 text-white p-2 rounded">
+        {tooltipText}
+      </div>
+    </div>
+  {/if}
+</div>
+```
+
+### Accessible Form Components
+```svelte
+<!-- AccessibleSelect.svelte -->
+<script lang="ts">
+  import * as select from "@zag-js/select";
+  import { useMachine, normalizeProps } from "@zag-js/svelte";
+
+  let { 
+    options = [], 
+    value = $bindable(''), 
+    placeholder = 'Select...',
+    label 
+  } = $props();
+  
+  const collection = select.collection({ items: options });
+  const service = useMachine(select.machine, { 
+    id: "select",
+    collection,
+    value: value ? [value] : []
+  });
+  
+  const api = $derived(select.connect(service, normalizeProps));
+  
+  $effect(() => {
+    const selectedValue = api.value[0];
+    if (selectedValue !== value) {
+      value = selectedValue || '';
+    }
+  });
+</script>
+
+<div {...api.getRootProps()}>
+  {#if label}
+    <label {...api.getLabelProps()}>{label}</label>
+  {/if}
+  
+  <div {...api.getControlProps()}>
+    <button 
+      {...api.getTriggerProps()} 
+      class="btn variant-form-material w-full justify-between"
+    >
+      <span {...api.getValueTextProps()}>
+        {api.valueAsString || placeholder}
+      </span>
+      <span>▼</span>
+    </button>
+  </div>
+  
+  {#if api.open}
+    <div {...api.getPositionerProps()}>
+      <div {...api.getContentProps()} class="card p-2 max-h-48 overflow-auto">
+        {#each options as option}
+          <div 
+            {...api.getItemProps({ item: option })}
+            class="p-2 hover:bg-surface-hover-token rounded cursor-pointer"
+            class:bg-primary-active-token={api.isItemSelected(option)}
+          >
+            <span {...api.getItemTextProps({ item: option })}>
+              {option.label}
+            </span>
+          </div>
+        {/each}
+      </div>
+    </div>
+  {/if}
+</div>
+```
+
+## Best Practices
+
+### Machine Configuration
+```ts
+// Create reusable machine configurations
+export const createTooltipMachine = (config: Partial<TooltipConfig> = {}) => 
+  tooltip.machine({
+    id: crypto.randomUUID(),
+    positioning: {
+      placement: 'top',
+      ...config.positioning
+    },
+    ...config
+  });
+
+// Use in components
+const service = useMachine(createTooltipMachine({
+  positioning: { placement: 'bottom' }
+}));
+```
+
+### Context Management
+```svelte
+<script lang="ts">
+  import { setContext, getContext } from 'svelte';
+  
+  // Parent provides machine context
+  const dialogService = useMachine(dialog.machine, { id: "main-dialog" });
+  setContext('dialog', dialogService);
+  
+  // Child components access context
+  const service = getContext('dialog');
+  const api = $derived(dialog.connect(service, normalizeProps));
+</script>
+```
+
+### Accessibility Considerations
+- Always use proper ARIA labels and descriptions
+- Ensure keyboard navigation works correctly
+- Test with screen readers
+- Use semantic HTML elements where possible
+- Handle focus management properly
+
+### Performance Tips
+- Use `$derived` for reactive API connections
+- Avoid creating new machines on every render
+- Use context for shared machine instances
+- Implement proper cleanup in $effect return functions

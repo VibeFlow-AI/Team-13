@@ -1,0 +1,284 @@
+---
+alwaysApply: true
+---
+# Tailwind CSS 4 Rules
+
+This project uses **Tailwind CSS v4** (NOT v3). The configuration and syntax have changed significantly.
+
+## Critical Changes from v3
+
+### CSS-based Configuration
+```css
+/* OLD v3: tailwind.config.js */
+module.exports = {
+  theme: {
+    colors: {
+      primary: '#3b82f6'
+    }
+  }
+}
+
+/* NEW v4: CSS configuration */
+@theme {
+  --color-primary: #3b82f6;
+  --font-family-sans: Inter, sans-serif;
+  --spacing-18: 4.5rem;
+}
+```
+
+### @source Directive for Component Libraries
+```css
+/* app.css */
+@import "tailwindcss";
+
+/* Scan external component libraries */
+@source "../node_modules/@skeletonlabs/skeleton-svelte/dist";
+@source "../node_modules/some-other-lib/dist";
+
+/* Custom theme configuration */
+@theme {
+  --color-primary-50: #eff6ff;
+  --color-primary-500: #3b82f6;
+  --color-primary-900: #1e3a8a;
+}
+```
+
+### New Installation Pattern
+```ts
+// vite.config.ts - No plugin needed in v4
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [sveltekit()]
+  // No @tailwindcss/vite plugin needed
+});
+```
+
+## Theme Configuration
+
+### Colors
+```css
+@theme {
+  /* Custom color palette */
+  --color-brand-50: #f0f9ff;
+  --color-brand-100: #e0f2fe;
+  --color-brand-500: #0ea5e9;
+  --color-brand-900: #0c4a6e;
+  
+  /* Override default colors */
+  --color-blue-500: #2563eb;
+  
+  /* Semantic colors */
+  --color-primary: var(--color-brand-500);
+  --color-secondary: var(--color-gray-600);
+}
+```
+
+### Typography
+```css
+@theme {
+  --font-family-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-family-mono: "JetBrains Mono", ui-monospace, monospace;
+  
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+}
+```
+
+### Spacing
+```css
+@theme {
+  --spacing-0: 0;
+  --spacing-px: 1px;
+  --spacing-0_5: 0.125rem;
+  --spacing-1: 0.25rem;
+  --spacing-18: 4.5rem;  /* Custom spacing */
+  --spacing-72: 18rem;   /* Custom spacing */
+}
+```
+
+### Responsive Breakpoints
+```css
+@theme {
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+```
+
+## Advanced Features
+
+### Custom Utilities
+```css
+@utility screen {
+  @media (min-width: theme(--breakpoint-sm)) {
+    .screen-sm {
+      @apply block;
+    }
+  }
+}
+
+@utility glass {
+  .glass {
+    backdrop-filter: blur(16px);
+    background-color: rgb(255 255 255 / 0.1);
+    border: 1px solid rgb(255 255 255 / 0.2);
+  }
+}
+```
+
+### Component Styles
+```css
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary/90;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-900 hover:bg-gray-300;
+  }
+}
+```
+
+### Dark Mode
+```css
+@theme {
+  /* Light mode colors */
+  --color-background: white;
+  --color-foreground: black;
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    /* Dark mode colors */
+    --color-background: #0f172a;
+    --color-foreground: white;
+  }
+}
+
+/* Manual dark mode toggle */
+[data-theme="dark"] {
+  @theme {
+    --color-background: #0f172a;
+    --color-foreground: white;
+  }
+}
+```
+
+## Svelte Integration
+
+### Dynamic Classes
+```svelte
+<script lang="ts">
+  let isActive = $state(false);
+  let variant = $state<'primary' | 'secondary'>('primary');
+  
+  let buttonClasses = $derived(`
+    btn
+    ${variant === 'primary' ? 'btn-primary' : 'btn-secondary'}
+    ${isActive ? 'active' : ''}
+  `.trim());
+</script>
+
+<button class={buttonClasses}>
+  Click me
+</button>
+
+<!-- Or use class: directive -->
+<button 
+  class="btn btn-primary"
+  class:active={isActive}
+>
+  Click me
+</button>
+```
+
+### CSS Custom Properties
+```svelte
+<script lang="ts">
+  let primaryColor = $state('#3b82f6');
+  let spacing = $state(16);
+</script>
+
+<div 
+  style:--primary-color={primaryColor}
+  style:--spacing="{spacing}px"
+  class="bg-[--primary-color] p-[--spacing]"
+>
+  Dynamic styling
+</div>
+```
+
+## Performance Optimization
+
+### Purging Strategy
+```css
+/* Only include utilities actually used */
+@source "./src/**/*.{html,js,svelte,ts}";
+@source "../node_modules/@skeletonlabs/skeleton-svelte/dist";
+
+/* Avoid scanning large unnecessary directories */
+/* DON'T: @source "./node_modules/**"; */
+```
+
+### Critical CSS
+```css
+/* Split critical and non-critical styles */
+@import "tailwindcss" layer(base, components);
+
+/* Non-critical utilities loaded separately */
+@import "tailwindcss" layer(utilities);
+```
+
+## Common Patterns
+
+### Layout Utilities
+```svelte
+<!-- Container with responsive padding -->
+<div class="container mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Content -->
+  </div>
+</div>
+
+<!-- Flexbox layouts -->
+<div class="flex flex-col sm:flex-row gap-4 items-center justify-between">
+  <!-- Content -->
+</div>
+```
+
+### Interactive States
+```svelte
+<button class="
+  btn-primary
+  hover:bg-primary/90 
+  focus:ring-2 focus:ring-primary/50 
+  active:scale-95
+  disabled:opacity-50 disabled:cursor-not-allowed
+  transition-all duration-200
+">
+  Interactive Button
+</button>
+```
+
+## Migration from v3
+
+1. **Remove tailwind.config.js** - Use CSS @theme instead
+2. **Update imports** - Use @import "tailwindcss" 
+3. **Add @source directives** - For component library scanning
+4. **Convert config to CSS** - Move theme to @theme blocks
+5. **Update build process** - Remove Tailwind plugin from Vite config

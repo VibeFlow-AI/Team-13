@@ -1,0 +1,73 @@
+---
+alwaysApply: true
+---
+## 📂 `src/` High-Level Layout
+| Directory | Contents | Notes |
+|-----------|----------|-------|
+| `routes/` | SvelteKit route files *(+page.svelte, +server.ts)* | Route-driven but _thin_; delegate heavy logic to **features** |
+| `features/` | **Domain-driven feature modules** | Each feature owns its UI, stores, services & tests |
+| `lib/` | App-wide shared code | Small, generic utilities only |
+| `app.css` | Global style imports and Tailwind layer setup | See [app.css](mdc:src/app.css) |
+| `app.html` | HTML template | See [app.html](mdc:src/app.html) |
+
+### Why `features/`?
+1. Scales gracefully – add/remove features without touching core.  
+2. Local reasoning – everything a tutor needs for *Quiz Builder* lives under `features/quiz-builder/`.  
+3. Easier tests & ownership.
+
+---
+
+## 🎯 Feature Module Template
+```
+features/
+  └─ quiz-builder/
+        +page.svelte          # Route entry (imports module UI)
+        QuizBuilder.svelte    # Primary component (PascalCase)
+        store.ts              # Local Svelte store(s)
+        service.ts            # API/DB calls (Supabase, Gemini)
+        types.ts              # Domain models (interfaces, enums)
+        index.ts              # Public re-exports
+        __tests__/
+            QuizBuilder.test.ts
+```
+
+*Sub-folders like `components/`, `dialogs/`, or `utils/` are fine if size grows.*
+
+---
+
+## 📚 `lib/` (cross-feature helpers)
+| Path | Responsibility |
+|------|----------------|
+| `lib/components/` | Truly generic UI (e.g., `Button.svelte`, `Tooltip.svelte`) |
+| `lib/stores/` | Global state (e.g., `themeStore.ts`) |
+| `lib/services/` | Cross-feature services (analytics, auth) |
+| `lib/models/` | Global TypeScript types (DTOs, enums) |
+| `lib/utils/` | Pure helper functions |
+| `lib/theme/` | Theme system files – see [theme.ts](mdc:src/lib/theme.ts) |
+
+---
+
+## 🗂️ Naming Conventions
+1. **Directories** – `kebab-case` → easy CLI navigation.  
+2. **Files** –
+   * Svelte components: `PascalCase.svelte`  
+   * Stores/Services: `camelCase.ts`  
+   * Constants/Enums: `SCREAMING_SNAKE_CASE.ts`  
+3. **Indices** – Each folder exposing multiple items exports via `index.ts`.
+4. **Tests** – colocated under `__tests__/` inside same feature to keep context.
+
+---
+
+## 🔄 Import Rules
+* Prefer relative imports _within a feature_.
+* Use `$lib/*` alias (SvelteKit) for cross-feature imports to avoid deep `../../..`.
+* UI imports always from `lib/components` unless feature-specific.
+
+---
+
+## 🛠  Cursor AI Tips
+* When generating new files, **choose the correct feature folder first**.  
+* New shared utilities go in `lib/utils/` unless they are feature-specific.  
+* Route logic should remain minimal – heavy computation belongs to its feature service or store.
+
+---

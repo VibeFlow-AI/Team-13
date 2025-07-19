@@ -1,0 +1,135 @@
+---
+description: Enforce consistent code commenting and documentation standards
+alwaysApply: false
+---
+# Code Commenting Standards
+
+## Always Generate Comments For:
+- All functions and methods with JSDoc/docstring format
+- Complex algorithms or business logic
+- API endpoints and their parameters
+- Class definitions and their purposes
+- Non-obvious variable declarations
+- Configuration objects and their properties
+
+## Comment Format Requirements:
+- Use JSDoc format for JavaScript/TypeScript: `/** */`
+- Use docstrings for Python functions
+- Include @param and @return tags where applicable
+- Explain the "why" not just the "what"
+- Keep comments concise but comprehensive
+
+## Example Patterns:
+
+/**
+ * Calculates the total price including tax and discounts
+ * @param {number} basePrice - The original price before modifications
+ * @param {number} taxRate - Tax rate as decimal (0.1 for 10%)
+ * @param {number} discount - Discount amount to subtract
+ * @returns {number} Final price after tax and discount calculations
+ */
+function calculateTotalPrice(basePrice, taxRate, discount) {
+    // Apply discount first, then calculate tax on discounted amount
+    const discountedPrice = basePrice - discount;
+    return discountedPrice * (1 + taxRate);
+}
+
+CRITICAL: When generating or modifying code, ALWAYS include appropriate comments following these standards.
+
+
+### User-Level Comment Preferences
+
+Set global comment preferences in Cursor Settings > Rules > User Rules[1][3]:
+
+# Global Comment Preferences
+
+## Response Style:
+- Always include comments in generated code
+- Prefer JSDoc format for function documentation
+- Include inline comments for complex logic
+- Generate comments that explain business logic, not obvious syntax
+
+## Code Generation Requirements:
+- Every function must have a docstring/JSDoc comment
+- Complex conditional logic requires explanatory comments
+- API calls and data transformations need context comments
+- Error handling blocks should explain the recovery strategy
+
+## Automatic Comment Generation Techniques
+
+### Using Inline Commands
+
+You can trigger comment generation using Cursor's inline editor (Cmd/Ctrl + K)[4][5]:
+
+1. **Select existing code** that needs comments
+2. **Press Cmd/Ctrl + K** to open inline editor
+3. **Type prompts like:**
+   - "Add JSDoc comments to this function"
+   - "Generate comprehensive comments for this class"
+   - "Add inline comments explaining the algorithm"
+   - "Document this API endpoint with parameter descriptions"
+
+---
+
+# JavaScript/TypeScript Comment Requirements
+
+When writing or modifying JavaScript/TypeScript code:
+
+1. **Function Documentation**: Every function must have JSDoc comments with:
+   ```
+   /**
+    * Brief description of function purpose
+    * @param {type} paramName - Parameter description
+    * @returns {type} Description of return value
+    * @throws {ErrorType} When this error occurs
+    */
+   ```
+
+2. **Class Documentation**: Classes require comprehensive comments:
+   ```
+   /**
+    * Represents a user account with authentication capabilities
+    * @class UserAccount
+    * @extends BaseUser
+    */
+   ```
+
+3. **Complex Logic**: Any non-trivial algorithms need explanatory comments:
+   ```
+   // Using binary search to optimize lookup performance
+   // Time complexity: O(log n), Space complexity: O(1)
+   ```
+
+ALWAYS apply these standards when generating or modifying code.
+
+# Universal Comment Standards
+
+## Core Principles:
+- Comments explain WHY, not WHAT
+- Function signatures are documented
+- Complex business logic is explained
+- Error handling strategies are documented
+
+### Automated Comment Quality Rules
+
+Ensure comment quality with specific guidelines[8][9]:
+
+```
+# Comment Quality Standards
+
+## Prohibited Comment Patterns:
+- Never write "// TODO: implement this" without context
+- Avoid comments that just repeat the code
+- Don't leave incomplete code with "// ... rest of code" comments
+
+## Required Comment Elements:
+- Purpose and context for each function
+- Parameter validation and expected ranges
+- Side effects and state changes
+- Error conditions and handling strategies
+
+## Comment Maintenance:
+- Update comments when code changes
+- Remove outdated or incorrect comments
+- Ensure comments add value beyond obvious code reading
+```

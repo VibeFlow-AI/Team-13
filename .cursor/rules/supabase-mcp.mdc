@@ -1,0 +1,460 @@
+---
+description: Supabase and MCP Rules
+globs: 
+alwaysApply: false
+---
+# Supabase Database & MCP Rules
+
+**For AI-first Sri Lankan education platform with direct database toolcalls**
+
+## 1. Database Schema Overview
+
+### Core Entity Relationships
+```
+Users → Classes → ClassQuizzes → QuizSessions → QuizAttempts → StudentAnswers
+Papers ↔ Questions ↔ QuestionOptions
+Topics ← SyllabusUnits → SyllabusContent
+Questions ← Assets (images, code, scenarios)
+Questions ← LearningObjectives (many-to-many)
+```
+
+### Key Tables & Purposes
+- **`users`** - Students, instructors, admins with RLS enabled
+- **`papers`** - Past papers (CT2020-2024) and custom exam papers
+- **`questions`** - 700+ questions with AI difficulty scoring, embeddings, syllabus alignment
+- **`question_options`** - MCQ choices with explanations and correctness flags
+- **`syllabus_units`** - 13 ICT A/L units in English/Sinhala with time allocations
+- **`topics`** - 635+ granular topics under syllabus units
+- **`assets`** - Images, code snippets, tables, scenarios (274 currently linked)
+- **`classes`** - Teacher-managed classrooms with join codes
+- **`quiz_sessions`** - Student quiz sessions (partitioned by time/hash)
+
+## 2. Supabase MCP Operations
+
+### Database Queries
+```typescript
+// ✅ Safe read operations via MCP
+await mcp_supabase_execute_sql({
+  project_id: "aintacbzkaekdqvnrygz",
+  query: `
+    SELECT q.id, q.stem, q.question_number, p.keycode, t.name as topic
+    FROM questions q
+    JOIN papers p ON q.paper_id = p.id
+    JOIN topics t ON q.topic_id = t.id
+    WHERE q.deleted_at IS NULL 
+    AND q.cognitive_level_id = $1
+    ORDER BY q.created_at DESC
+    LIMIT 10
+  `
+});
+
+// ✅ Analytics queries with proper JOINs
+await mcp_supabase_execute_sql({
+  project_id: "aintacbzkaekdqvnrygz", 
+  query: `
+    SELECT 
+      su.unit_name_eng,
+      COUNT(q.id) as question_count,
+      AVG(q.ai_difficulty) as avg_difficulty,
+      COUNT(CASE WHEN q.asset_id IS NOT NULL THEN 1 END) as with_assets
+    FROM syllabus_units su
+    JOIN topics t ON su.id = t.syllabus_unit_id
+    JOIN questions q ON t.id = q.topic_id
+    WHERE q.deleted_at IS NULL
+    GROUP BY su.id, su.unit_name_eng
+    ORDER BY question_count DESC
+  `
+});
+```
+
+### DDL Operations via Migrations
+```sql
+-- ✅ Use apply_migration for schema changes
+-- Example: Adding AI features
+CREATE TABLE ai_question_feedback (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  question_id uuid NOT NULL REFERENCES questions(id),
+  feedback_type text NOT NULL CHECK (feedback_type IN ('difficulty', 'clarity', 'relevance')),
+  ai_score numeric CHECK (ai_score >= 0.0 AND ai_score <= 1.0),
+  feedback_text text,
+  created_at timestamptz DEFAULT now()
+);
+
+-- ✅ Enable RLS for security
+ALTER TABLE ai_question_feedback ENABLE ROW LEVEL SECURITY;
+
+-- ✅ Create appropriate indexes
+CREATE INDEX idx_ai_feedback_question ON ai_question_feedback(question_id);
+CREATE INDEX idx_ai_feedback_type ON ai_question_feedback(feedback_type);
+```
+
+### Data Structure Patterns
+
+#### Question Creation Flow
+```typescript
+// 1. Create question with proper references
+const questionId = await mcp_supabase_execute_sql({
+  project_id: "aintacbzkaekdqvnrygz",
+  query: `
+    INSERT INTO questions (
+      paper_id, topic_id, question_type_id, cognitive_level_id,
+      question_number, stem, explanation, ai_difficulty,
+      created_by, author_id
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    RETURNING id
+  `
+});
+
+// 2. Add question options with proper ordering
+for (const [index, option] of options.entries()) {
+  await mcp_supabase_execute_sql({
+    project_id: "aintacbzkaekdqvnrygz",
+    query: `
+      INSERT INTO question_options (
+        question_id, option_text, is_correct, 
+        display_order, created_by
+      ) VALUES ($1, $2, $3, $4, $5)
+    `,
+    params: [questionId, option.text, option.isCorrect, index + 1, userId]
+  });
+}
+```
+
+#### Class Management Flow
+```typescript
+// Create class with auto-generated join code
+const classResult = await mcp_supabase_execute_sql({
+  project_id: "aintacbzkaekdqvnrygz",
+  query: `
+    INSERT INTO classes (teacher_id, name, grade, subject_code)
+    VALUES ($1, $2, $3, $4)
+    RETURNING id, join_code
+  `
+});
+
+// Assign quiz to class
+await mcp_supabase_execute_sql({
+  project_id: "aintacbzkaekdqvnrygz",
+  query: `
+    INSERT INTO class_quizzes (
+      class_id, paper_id, title, open_at, close_at, 
+      time_limit_minutes, created_by
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+    RETURNING id
+  `
+});
+```
+
+## 3. Sri Lankan Education Context
+
+### Syllabus Units (ICT A/L)
+- **Unit 1-13**: Fundamentals of ICT → Advanced Programming
+- **Bilingual**: English + Sinhala names for all units
+- **Time Allocation**: Each unit has defined time periods
+- **Topics**: 635+ granular topics mapped to units
+
+### Question Types & Standards
+```typescript
+// Available question types in the system
+const QUESTION_TYPES = {
+  1: 'AssetBasedMCQ',       // Questions with images/code/scenarios
+  2: 'FillInTheBlank',      // Text completion
+  3: 'Programming_CSS',     // CSS coding questions
+  4: 'Programming_HTML',    // HTML structure questions  
+  5: 'Programming_Python',  // Python programming
+  6: 'Programming_SQL',     // Database queries
+  7: 'StandardMCQ',         // Traditional multiple choice
+  8: 'StatementEvaluationMCQ' // True/false with reasoning
+};
+
+// Bloom's Taxonomy cognitive levels
+const COGNITIVE_LEVELS = {
+  1: 'Remember',    // Recall facts, terms, basic concepts
+  2: 'Understand',  // Explain ideas or concepts  
+  3: 'Apply',       // Use information in new situations
+  4: 'Analyze',     // Draw connections among ideas
+  5: 'Evaluate',    // Justify a stand or decision
+  6: 'Create'       // Produce new or original work
+};
+```
+
+### Asset Management
+```typescript
+// Asset types supported
+const ASSET_TYPES = {
+  1: 'image',          // Screenshots, diagrams, charts
+  2: 'table',          // Data tables, comparison charts
+  3: 'code_snippet',   // Programming code examples
+  4: 'database_schema', // SQL schema definitions
+  5: 'flowchart',      // Process flow diagrams
+  6: 'scenario'        // Real-world problem scenarios
+};
+
+// Asset creation pattern
+await mcp_supabase_execute_sql({
+  project_id: "aintacbzkaekdqvnrygz",
+  query: `
+    INSERT INTO assets (type_id, content, storage_path, metadata)
+    VALUES ($1, $2, $3, $4)
+    RETURNING id
+  `
+});
+```
+
+## 4. Performance & Partitioning
+
+### Partitioned Tables
+```sql
+-- quiz_attempts: Partitioned by month (started_at)
+-- student_answers: Hash partitioned by attempt_id (8 partitions: h0-h7)
+-- Queries automatically route to correct partition
+```
+
+### Analytics Patterns
+```typescript
+// ✅ Efficient queries respect partitioning
+await mcp_supabase_execute_sql({
+  project_id: "aintacbzkaekdqvnrygz",
+  query: `
+    -- Query specific month partition
+    SELECT session_id, score, finished_at - started_at as duration
+    FROM quiz_attempts_y2024m10 
+    WHERE started_at >= $1 AND started_at < $2
+  `
+});
+
+// ✅ Cross-partition aggregation
+await mcp_supabase_execute_sql({
+  project_id: "aintacbzkaekdqvnrygz",
+  query: `
+    -- Union across partitions for full view
+    SELECT student_id, AVG(score) as avg_score
+    FROM (
+      SELECT qa.session_id, qs.student_id, qa.score
+      FROM quiz_attempts qa
+      JOIN quiz_sessions qs ON qa.session_id = qs.id
+      WHERE qa.finished_at >= $1
+    ) scores
+    GROUP BY student_id
+  `
+});
+```
+
+## 5. Security & RLS Patterns
+
+### Row Level Security
+```sql
+-- Most tables have RLS enabled
+-- Teachers see only their classes/questions
+-- Students see only their own data
+-- Admins have full access
+
+-- Example RLS policy for questions
+CREATE POLICY "Teachers see own questions" ON questions
+  FOR SELECT USING (
+    auth.uid() = created_by OR 
+    auth.uid() = author_id OR
+    EXISTS (
+      SELECT 1 FROM classes c 
+      WHERE c.teacher_id = auth.uid()
+      AND c.id IN (
+        SELECT cq.class_id FROM class_quizzes cq 
+        WHERE cq.paper_id = questions.paper_id
+      )
+    )
+  );
+```
+
+### Safe Query Patterns
+```typescript
+// ✅ Always use parameterized queries
+await mcp_supabase_execute_sql({
+  project_id: "aintacbzkaekdqvnrygz",
+  query: "SELECT * FROM questions WHERE paper_id = $1 AND deleted_at IS NULL",
+  // Never string interpolation: `SELECT * FROM questions WHERE paper_id = '${paperId}'`
+});
+
+// ✅ Respect soft deletes
+await mcp_supabase_execute_sql({
+  project_id: "aintacbzkaekdqvnrygz", 
+  query: `
+    SELECT q.*, p.keycode 
+    FROM questions q
+    JOIN papers p ON q.paper_id = p.id
+    WHERE q.deleted_at IS NULL 
+    AND p.deleted_at IS NULL
+  `
+});
+```
+
+## 6. MCP Toolcall Best Practices
+
+### Error Handling
+```typescript
+try {
+  const result = await mcp_supabase_execute_sql({
+    project_id: "aintacbzkaekdqvnrygz",
+    query: complexQuery
+  });
+  
+  if (!result || result.length === 0) {
+    // Handle empty results gracefully
+    return { success: false, message: "No data found" };
+  }
+  
+  return { success: true, data: result };
+} catch (error) {
+  // Log error but don't expose internal details
+  console.error('Database query failed:', error);
+  return { success: false, message: "Query execution failed" };
+}
+```
+
+### Batch Operations
+```typescript
+// ✅ Use transactions for related operations
+await mcp_supabase_execute_sql({
+  project_id: "aintacbzkaekdqvnrygz",
+  query: `
+    BEGIN;
+    
+    INSERT INTO questions (...) VALUES (...);
+    INSERT INTO question_options (...) VALUES (...);
+    INSERT INTO question_learning_objectives (...) VALUES (...);
+    
+    COMMIT;
+  `
+});
+```
+
+### Monitoring & Logging
+```typescript
+// ✅ Use get_logs for debugging
+const logs = await mcp_supabase_get_logs({
+  project_id: "aintacbzkaekdqvnrygz",
+  service: "postgres"  // or "api", "auth", "storage"
+});
+
+// ✅ Check for security/performance advisors
+const advisors = await mcp_supabase_get_advisors({
+  project_id: "aintacbzkaekdqvnrygz",
+  type: "security"  // or "performance"
+});
+```
+
+## 7. Common Query Patterns
+
+### Question Bank Analytics
+```sql
+-- Most difficult questions by unit
+SELECT 
+  su.unit_name_eng,
+  q.stem,
+  q.ai_difficulty,
+  cl.name as cognitive_level,
+  COUNT(sa.id) as attempt_count,
+  ROUND(AVG(CASE WHEN sa.is_correct THEN 1.0 ELSE 0.0 END), 2) as success_rate
+FROM questions q
+JOIN topics t ON q.topic_id = t.id  
+JOIN syllabus_units su ON t.syllabus_unit_id = su.id
+JOIN cognitive_levels cl ON q.cognitive_level_id = cl.id
+LEFT JOIN student_answers sa ON q.id = sa.question_id
+WHERE q.deleted_at IS NULL
+GROUP BY q.id, su.unit_name_eng, q.stem, q.ai_difficulty, cl.name
+HAVING COUNT(sa.id) > 5
+ORDER BY q.ai_difficulty DESC, success_rate ASC;
+```
+
+### Student Performance Tracking
+```sql
+-- Student progress by syllabus unit
+SELECT 
+  u.full_name,
+  su.unit_name_eng,
+  COUNT(DISTINCT q.id) as questions_attempted,
+  COUNT(CASE WHEN sa.is_correct THEN 1 END) as correct_answers,
+  ROUND(AVG(CASE WHEN sa.is_correct THEN 1.0 ELSE 0.0 END) * 100, 1) as accuracy_percentage
+FROM users u
+JOIN quiz_sessions qs ON u.id = qs.student_id
+JOIN quiz_attempts qa ON qs.id = qa.session_id  
+JOIN student_answers sa ON qa.id = sa.attempt_id
+JOIN questions q ON sa.question_id = q.id
+JOIN topics t ON q.topic_id = t.id
+JOIN syllabus_units su ON t.syllabus_unit_id = su.id
+WHERE u.role_id = 1 -- students only
+GROUP BY u.id, u.full_name, su.id, su.unit_name_eng
+ORDER BY u.full_name, su.unit_number;
+```
+
+### Asset Usage Analysis
+```sql
+-- Questions with assets vs. performance
+SELECT 
+  at.name as asset_type,
+  COUNT(DISTINCT q.id) as question_count,
+  AVG(q.ai_difficulty) as avg_difficulty,
+  COUNT(sa.id) as total_attempts,
+  ROUND(AVG(CASE WHEN sa.is_correct THEN 1.0 ELSE 0.0 END), 3) as success_rate
+FROM questions q
+LEFT JOIN assets a ON q.asset_id = a.id
+LEFT JOIN asset_types at ON a.type_id = at.id
+LEFT JOIN student_answers sa ON q.id = sa.question_id
+WHERE q.deleted_at IS NULL
+GROUP BY at.id, at.name
+ORDER BY success_rate DESC;
+```
+
+## 8. Integration with AI Systems
+
+### Question Generation Pipeline
+```typescript
+// 1. Generate question using Gemini
+const questionData = await generateQuestionWithGemini({
+  topic_id: "uuid",
+  cognitive_level: "Apply",
+  difficulty: 0.7
+});
+
+// 2. Store in database with proper validation
+const result = await mcp_supabase_execute_sql({
+  project_id: "aintacbzkaekdqvnrygz",
+  query: `
+    WITH question_insert AS (
+      INSERT INTO questions (
+        paper_id, topic_id, question_type_id, cognitive_level_id,
+        question_number, stem, explanation, ai_difficulty,
+        created_by, author_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING id
+    )
+    INSERT INTO question_options (question_id, option_text, is_correct, display_order)
+    SELECT qi.id, unnest($11::text[]), unnest($12::boolean[]), generate_series(1, array_length($11, 1))
+    FROM question_insert qi
+    RETURNING question_id
+  `
+});
+```
+
+### Real-time Analytics
+```typescript
+// Update question analytics asynchronously
+await mcp_supabase_execute_sql({
+  project_id: "aintacbzkaekdqvnrygz",
+  query: `
+    UPDATE questions 
+    SET 
+      total_attempts = (
+        SELECT COUNT(*) FROM student_answers 
+        WHERE question_id = questions.id
+      ),
+      correct_attempts = (
+        SELECT COUNT(*) FROM student_answers 
+        WHERE question_id = questions.id AND is_correct = true
+      ),
+      updated_at = now()
+    WHERE id = $1
+  `
+});
+```
+
+This rule file provides comprehensive guidance for working with the APlusNew Supabase database through MCP toolcalls, ensuring security, performance, and proper Sri Lankan education context handling.
